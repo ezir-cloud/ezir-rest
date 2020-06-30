@@ -1,7 +1,5 @@
 from _operator import index
-
 from githubapis.search import GitRepositoryApisDetails
-
 from rest_app.dal.dal import insert_api_repo_info
 
 
