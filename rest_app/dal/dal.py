@@ -21,4 +21,12 @@ def insert_api_file_info(api_file_info,index):
         file_info_response = helpers.bulk(es,bulk_json_data(api_file_info,index))
     except Exception as err:
         import traceback
-        print("Elasticsearch index() ERRPR",traceback.format_exc())
+        print("Elasticsearch bulk() ERRPR",traceback.format_exc())
+
+def search_file_by_name(index,file_name):
+    try:
+        get_file_details =es.search(index=index, body={"query" :{"match": {"file_name" :file_name } }})
+    except Exception as err:
+        import traceback
+        print("Elasticsearch search() ERRPR",traceback.format_exc())
+    return get_file_details
