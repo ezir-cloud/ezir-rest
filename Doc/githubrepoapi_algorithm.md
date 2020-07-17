@@ -2,7 +2,7 @@ Step 1 : Start
 Step 2 : Create Github class   
 Step 3: Create function get_repo_details   
 Step 4: Initialize  target url (https://api.github.com/search/repositories)    
-Step 5 : Take  year, month with day,year, date with month,year,or take start date and last date.    
+Step 5 : Take  year eg 2012, month eg 2020-01, date eg 2020-01-01,or take start date and last date 2020-01-01 to 2020-01-25.     
 Step 6  : First api call takes total count and 100 repositories details.    
 Step 7: If total count more than 100 then again api call.    
 Step 8 : Every day total count is less than 1000 or equal to 1000 api call 1 to 10 times and  get repositories details.       
