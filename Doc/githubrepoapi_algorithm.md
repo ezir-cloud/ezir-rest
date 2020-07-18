@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 ## Title and People    
 
 This documentation is about github api. Github  Search API helps you search for the specific item you want to find.    
@@ -74,26 +74,23 @@ https://api.github.com/search/repositories?q=dockerfile+created:2020-01-01T14:00
 results of one min.    
 https://api.github.com/search/repositories?q=java+created:2020-01-01T14:02:00Z..2020-01-01T14:03:00Z   
    
-Every url which is used to search the results in the github is based on a job.every job is scheduled by one min. The    
-job details are saved in sqlite database using sqlalchemy. Table name is githubapijob . columns are JobId, JobType,     
-CreatedAt, UpdatedAt,  JobObject.    
- 
-    
+* Every url which is used to search the results in the github is passed in function arguments.Each function call by job.    
+Every job is scheduled by one min. The job details are saved in sqlite database using sqlalchemy. Table name is         
+githubapijob . columns are JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus.         
 
-=======
-Step 1 : Start     
-Step 2 : Create Github class   
-Step 3: Create function get_repo_details   
-Step 4: Initialize  target url (https://api.github.com/search/repositories)    
-Step 5 : Take  year eg 2012, month eg 2020-01, date eg 2020-01-01,or take start date and last date 2020-01-01 to 2020-01-25.     
-Step 6  : First api call takes total count and 100 repositories details.    
-Step 7: If total count more than 100 then again api call.    
-Step 8 : Every day total count is less than 1000 or equal to 1000 api call 1 to 10 times and  get repositories details.       
-Step 9 : If total count is more than 1000 then the api call with time.    
-Step 10 : The api call with time based on one hour.that means the api call 24 times(24hrs) .    
-Step 11: If total count is more than 1000 in one hour then the api call with min.    
-Step 12 :  Api call with min is 60 times. First 30 api call first min and last 30 api call second min.    
-Step 13 : After one hour the api call with the second hour and get repositories details.    
-Step 14:  End   
+Column  in githubapijob Table.    
+JobId : every job has a unique id.    
+JobType : job type is github api    
+CreatedAt : when url is passed as argument to that time store in CreatedAt.    
+UpdatedAt : This is the update time of the job.    
+JobObject : The job object is serialized.    
+Jobstatus : Jobstatus are running, completed and fail. When a job fail it retry after completing all jobs.    
+
  
->>>>>>> e279b6e76cb058e8def611f63e84d57c772678fd
+* If the search api gets a total count is less than 100 and equal to 100 repositories details stored in elasticsearch    
+database.if total count is more than 100 then first stored 100 repositories details and create  the second url to search    
+more repositories details.    
+
+* The first job is running and takes 1 to 100 repository details then the second job is running and takes  1 to 100       
+repository details till the last job. That means total jobs that are created to search api results. If the search result    
+is more than 100  then create a new url and create a new job  that runs after completing all the available jobs.    
