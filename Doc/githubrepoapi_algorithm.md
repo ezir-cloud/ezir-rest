@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 ## Title and People    
 
 This documentation is about github api. Github  Search API helps you search for the specific item you want to find.    
