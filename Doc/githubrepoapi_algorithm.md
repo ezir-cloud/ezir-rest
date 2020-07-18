@@ -74,23 +74,24 @@ https://api.github.com/search/repositories?q=dockerfile+created:2020-01-01T14:00
 results of one min.    
 https://api.github.com/search/repositories?q=java+created:2020-01-01T14:02:00Z..2020-01-01T14:03:00Z   
    
-* Every url which is used to search the results in the github is passed in function arguments.Each function call by job.    
-Every job is scheduled by one min. The job details are saved in sqlite database using sqlalchemy. Table name is         
+
+* Every url which is used to search the results in the github is passed in function arguments.Each function call by job.  
+Every job is scheduled by one min. The job details are saved in sqlite database using sqlalchemy. Table name is    
 githubapijob . columns are JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus.         
 
-Column  in githubapijob Table.    
-JobId : every job has a unique id.    
+Column of githubapijob table    
+JobId : every job has a unique id.     
 JobType : job type is github api    
 CreatedAt : when url is passed as argument to that time store in CreatedAt.    
 UpdatedAt : This is the update time of the job.    
 JobObject : The job object is serialized.    
 Jobstatus : Jobstatus are running, completed and fail. When a job fail it retry after completing all jobs.    
-
  
 * If the search api gets a total count is less than 100 and equal to 100 repositories details stored in elasticsearch    
-database.if total count is more than 100 then first stored 100 repositories details and create  the second url to search    
-more repositories details.    
+database.if total count is more than 100 then first stored 100 repositories details and create  the second url to      
+search more repositories details.     
 
-* The first job is running and takes 1 to 100 repository details then the second job is running and takes  1 to 100       
-repository details till the last job. That means total jobs that are created to search api results. If the search result    
-is more than 100  then create a new url and create a new job  that runs after completing all the available jobs.    
+* The first job is running and takes 1 to 100 repository details then the second job is running and takes  1 to 100     
+repository details till the last job. That means total jobs that are created to search api results. If the search       
+result is more than 100  then create a new url and create a new job  that runs after completing all the available jobs.      
+
