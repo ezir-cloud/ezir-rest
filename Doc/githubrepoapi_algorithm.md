@@ -58,7 +58,7 @@ https://api.github.com/search/repositories?q=dockerfile+created:2020-01-01
 - Create function get_repo_details_by_date(repo_name,year, month, date)    
 Create one link of specified date  for github api   
 
-Create function get_repo_details_by_two_date(repo_name,start_date, last_late) 
+- Create function get_repo_details_by_two_date(repo_name,start_date, last_late) 
 Create link between start date 2019-01-01  and last date 2020-01-01 
 Example   
 https://api.github.com/search/repositories?q=dockerfile+created:2019-01-01..2020-01-31  
@@ -68,7 +68,7 @@ https://api.github.com/search/repositories?q=dockerfile+created:2019-01-01..2020
 and  this condition is applied in the above four functions.The time limit of github search api is one hour that means    
 every search api gets results of one hour.    
 Example    
-https://api.github.com/search/repositories?q=dockerfile+created:2020-01-01T14:00:00Z..2020-01-01T19:00:00Z      
+https://api.github.com/search/repositories?q=dockerfile+created:2020-01-01T14:00:00Z..2020-01-01T15:00:00Z      
 
 - If a github search api of one hour is more than 1,000 then it searches by min that means every search api gets    
 results of one min.    
