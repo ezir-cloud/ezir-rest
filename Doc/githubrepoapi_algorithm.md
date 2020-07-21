@@ -77,7 +77,7 @@ https://api.github.com/search/repositories?q=java+created:2020-01-01T14:02:00Z..
 
 * Every url which is used to search the results in the github is passed in function arguments.Each function call by job.  
 Every job is scheduled by one min. The job details are saved in sqlite database using sqlalchemy. Table name is    
-githubapijob . columns are JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus.         
+githubapijob . columns are JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus, Joblog.         
 
 Column of githubapijob table    
 JobId : every job has a unique id.     
@@ -85,7 +85,17 @@ JobType : job type is github api
 CreatedAt : when url is passed as argument to that time store in CreatedAt.    
 UpdatedAt : This is the update time of the job.    
 JobObject : The job object is serialized.    
-Jobstatus : Jobstatus are running, completed and fail. When a job fail it retry after completing all jobs.    
+Jobstatus : Jobstatus are running, completed and fail. When a job fail it retry after completing all jobs.     
+Joblog    : joblog column has four things. First  job complete, successful status.second  If  Api calls, the total count   
+is zero then this statement is store in log.  {   
+  "total_count": 0,    
+  "incomplete_results": false,   
+  "items": [   
+   
+  ]   
+}     
+Third, use a job using try and exception. If a job fails then the exception is stored in the logjob column.     
+ 
  
 * If the search api gets a total count is less than 100 and equal to 100 repositories details stored in elasticsearch    
 database.if total count is more than 100 then first stored 100 repositories details and create  the second url to      
