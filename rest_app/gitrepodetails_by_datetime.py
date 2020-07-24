@@ -45,7 +45,7 @@ class GitRepoApisDetails:
                 repo_details["watchers"] = repo.get("watchers")
                 all_repositories_details.append(repo_details)
 
-            print(all_repositories_details)
+           
             return all_repositories_details
 
 
@@ -61,7 +61,7 @@ class GitRepoApisDetails:
                 self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
 
                 if flag==1:
-                   nextTime = dt.datetime.now() + dt.timedelta(seconds=20)
+                 
                    nextTime = dt.datetime.now() + dt.timedelta(minutes=1)
                    dat=dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                    sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2,args=[self.target_url])
@@ -69,17 +69,15 @@ class GitRepoApisDetails:
 
                 else:
 
-                    nextTime = nextTime + dt.timedelta(seconds=20)
+                  
                     nextTime = nextTime + dt.timedelta(minutes=1)
                     dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                     sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2, args=[self.target_url])
 
 
-obj=GitRepoApisDetails()
-url=obj.get_repo_details_by_month("dockerfile",2020,2)
+
 
 try:
     sched.start()
 except (Exception):
     pass
-
