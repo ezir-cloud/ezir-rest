@@ -61,22 +61,16 @@ class GitRepoApisDetails:
                 self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
 
                 if flag==1:
-
-<<<<<<< HEAD
                    nextTime = dt.datetime.now() + dt.timedelta(seconds=20)
-=======
                    nextTime = dt.datetime.now() + dt.timedelta(minutes=1)
->>>>>>> c12cf9324d8fd9d8ae4b6b0f616b8f5904ff1c8a
                    dat=dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                    sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2,args=[self.target_url])
                    flag = 0
 
                 else:
-<<<<<<< HEAD
+
                     nextTime = nextTime + dt.timedelta(seconds=20)
-=======
                     nextTime = nextTime + dt.timedelta(minutes=1)
->>>>>>> c12cf9324d8fd9d8ae4b6b0f616b8f5904ff1c8a
                     dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                     sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2, args=[self.target_url])
 
