@@ -21,9 +21,9 @@ class GitRepoApisDetails:
             repo_details["full_name"] = repo.get("full_name")
             repo_details["private"] = repo.get("private")
             repo_details["owner"] = dict()
-            repo_details["owner"]["login"] = repo.get("login")
-            repo_details["owner"]["id"] = repo.get("id")
-            repo_details["owner"]["html_url"] = repo.get("html_url")
+            repo_details["owner"]["login"] = repo.get("owner").get("login")
+            repo_details["owner"]["id"] = repo.get("owner").get("id")
+            repo_details["owner"]["html_url"] = repo.get("owner").get("html_url")
             repo_details["html_url"] = repo.get("html_url")
             repo_details["description"] = repo.get("description")
             repo_details["url"] = repo.get("url")
@@ -65,6 +65,10 @@ class GitRepoApisDetails:
                 dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                 sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2, args=[self.target_url])
 
+
+    def get_repo_details_by_year(self,repo_name, year):
+
+        total_days = calendar.monthrange(year, month)[1]
 
 obj=GitRepoApisDetails()
 obj.get_repo_details_by_month("dockerfile",2020,4)
