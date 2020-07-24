@@ -24,9 +24,9 @@ class GitRepoApisDetails:
                 repo_details["full_name"] = repo.get("full_name")
                 repo_details["private"] = repo.get("private")
                 repo_details["owner"] = dict()
-                repo_details["owner"]["login"] = repo.get("login")
-                repo_details["owner"]["id"] = repo.get("id")
-                repo_details["owner"]["html_url"] = repo.get("html_url")
+                repo_details["owner"]["login"] = repo.get("owner").get("login")
+                repo_details["owner"]["id"] = repo.get("owner").get("id")
+                repo_details["owner"]["html_url"] = repo.get("owner").get("html_url")
                 repo_details["html_url"] = repo.get("html_url")
                 repo_details["description"] = repo.get("description")
                 repo_details["url"] = repo.get("url")
@@ -45,6 +45,7 @@ class GitRepoApisDetails:
                 repo_details["watchers"] = repo.get("watchers")
                 all_repositories_details.append(repo_details)
 
+            print(all_repositories_details)
             return all_repositories_details
 
 
@@ -61,18 +62,19 @@ class GitRepoApisDetails:
 
                 if flag==1:
 
-                   nextTime = dt.datetime.now() + dt.timedelta(seconds=10)
+                   nextTime = dt.datetime.now() + dt.timedelta(seconds=20)
                    dat=dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                    sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2,args=[self.target_url])
                    flag = 0
 
                 else:
-                    nextTime = nextTime + dt.timedelta(seconds=10)
+                    nextTime = nextTime + dt.timedelta(seconds=20)
                     dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                     sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2, args=[self.target_url])
 
 
-
+obj=GitRepoApisDetails()
+url=obj.get_repo_details_by_month("dockerfile",2020,2)
 
 try:
     sched.start()
