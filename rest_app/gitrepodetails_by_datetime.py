@@ -46,7 +46,7 @@ class GitRepoApisDetails:
                 repo_details["watchers"] = repo.get("watchers")
                 all_repositories_details.append(repo_details)
 
-            print(all_repositories_details)
+           
             return all_repositories_details
 
 
@@ -65,16 +65,17 @@ class GitRepoApisDetails:
                 print( self.target_url)
                 if flag==1:
 
-                   nextTime = dt.datetime.now() + dt.timedelta(seconds=1)
+                   nextTime = dt.datetime.now() + dt.timedelta(minutes=1)
                    dat=dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                    sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2,args=[self.target_url])
                    flag = 0
 
                 else:
 
-                    nextTime = nextTime + dt.timedelta(seconds=30)
+                    nextTime = nextTime + dt.timedelta(minutes=1)
                     dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                     sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2, args=[self.target_url])
+
 
         def get_repo_details_by_year(self,repo_name,year):
 
@@ -83,7 +84,6 @@ class GitRepoApisDetails:
             for month in range(1, 13):
 
                 total_days=calendar.monthrange(year,month)[1]
-
 
                 for days in range(1,total_days+1):
                     day_obj = datetime.date(year, month, days)
@@ -110,4 +110,3 @@ try:
     sched.start()
 except (Exception):
     pass
-
