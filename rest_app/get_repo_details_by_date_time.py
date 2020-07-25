@@ -128,7 +128,6 @@ obj=GitRepoApisDetails()
 #obj.get_repo_details_by_year("dockerfile",2019)
 #obj.get_repo_details_by_date("dockerfile",2020,4,10)
 obj.get_repo_details_by_two_date("dockerfile",2019,1,1,2020,1,31)
-
 sched.start()
 
 
