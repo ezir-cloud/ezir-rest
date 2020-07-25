@@ -112,8 +112,8 @@ class GitRepoApisDetails:
 
 
 obj=GitRepoApisDetails()
-# url=obj.get_repo_details_by_month("dockerfile",2020,2)
-# url=obj.get_repo_details_by_year("dockerfile",2019)
+url=obj.get_repo_details_by_month("dockerfile",2020,2)
+url=obj.get_repo_details_by_year("dockerfile",2019)
 url=obj.get_repo_by_date("dockerfile", 2020 , 1, 1)
 
 
