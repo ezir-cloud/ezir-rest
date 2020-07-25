@@ -90,10 +90,18 @@ class GitRepoApisDetails:
                     sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=30, args=[target_url])
 
 
+    def get_repo_details_by_date(self,repo_name,year,month,days):
+
+        day_obj = datetime.date(year, month, days)
+        target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(
+            repo_name=repo_name, date=day_obj)
+        self.job_is_get_repo(target_url)
+
+
 obj=GitRepoApisDetails()
 #obj.get_repo_details_by_month("dockerfile",2020,4)
-obj.get_repo_details_by_year("dockerfile",2019)
-
+#obj.get_repo_details_by_year("dockerfile",2019)
+obj.get_repo_details_by_date("dockerfile",2020,4,10)
 sched.start()
 
 
