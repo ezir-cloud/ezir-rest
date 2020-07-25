@@ -106,9 +106,10 @@ class GitRepoApisDetails:
         end_dt = date(year2, month2, days2)
         flag = 1
         nextTime = ''
-        for dti in self.daterange(start_dt, end_dt):
+        for index in range((end_dt-start_dt).days+1):
 
-            day_obj=dti.strftime("%Y-%m-%d")
+            new_date = start_dt + timedelta(index)
+            day_obj=new_date.strftime("%Y-%m-%d")
             target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(
                 repo_name=repo_name, date=day_obj)
             if flag == 1:
@@ -121,10 +122,6 @@ class GitRepoApisDetails:
                 dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                 sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=30, args=[target_url])
 
-
-    def daterange(self,date1, date2):
-        for n in range(int((date2 - date1).days) + 1):
-            yield date1 + timedelta(n)
 
 obj=GitRepoApisDetails()
 #obj.get_repo_details_by_month("dockerfile",2020,4)
