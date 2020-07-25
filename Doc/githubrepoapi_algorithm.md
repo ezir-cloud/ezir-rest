@@ -58,7 +58,7 @@ https://api.github.com/search/repositories?q=dockerfile+created:2020-01-01
 - Create function get_repo_details_by_date(repo_name,year, month, date)    
 Create one link of specified date  for github api   
 
-- Create function get_repo_details_by_two_date(repo_name,start_date, last_late) 
+- Create function get_repo_details_by_two_date(repo_name,start_date, last_late)         
 Create link between start date 2019-01-01  and last date 2020-01-01 
 Example   
 https://api.github.com/search/repositories?q=dockerfile+created:2019-01-01..2020-01-31  
@@ -77,7 +77,7 @@ https://api.github.com/search/repositories?q=java+created:2020-01-01T14:02:00Z..
 
 * Every url which is used to search the results in the github is passed in function arguments.Each function call by job.  
 Every job is scheduled by one min. The job details are saved in sqlite database using sqlalchemy. Table name is    
-githubapijob . columns are JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus, Joblog.         
+githubapijob . columns are JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus, Joblog, previousjobid.         
 
 Column of githubapijob table    
 JobId : every job has a unique id.     
@@ -94,12 +94,14 @@ is zero then this statement is store in log.  {
    
   ]   
 }     
-Third, use a job using try and exception. If a job fails then the exception is stored in the logjob column.     
- 
+Third, use a job using try and exception. If a job fails then the exception is stored in the logjob column.        
+previousjobid: first job id is 1. if first job is fail. then it create new job  with job id 2. if second job is fail then    
+create new job with job id 3. These records are in  previousjobid column.   
  
 * If the search api gets a total count is less than 100 and equal to 100 repositories details stored in elasticsearch    
 database.if total count is more than 100 then first stored 100 repositories details and create  the second url to      
 search more repositories details.     
+
 
 * The first job is running and takes 1 to 100 repository details then the second job is running and takes  1 to 100     
 repository details till the last job. That means total jobs that are created to search api results. If the search       
