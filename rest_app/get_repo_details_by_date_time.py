@@ -2,6 +2,7 @@ import requests
 import calendar
 import datetime
 import datetime as dt
+
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 sched = BlockingScheduler()
@@ -54,24 +55,45 @@ class GitRepoApisDetails:
         for days in range(1,total_days+1):
 
             day_obj = datetime.date(year, month, days)
-            self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
+            target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
+
             if flag==1:
-                nextTime = dt.datetime.now() + dt.timedelta(minutes=1)
+                nextTime = dt.datetime.now() + dt.timedelta(seconds=10)
                 dat=dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2,args=[self.target_url])
+                sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2 , args=[target_url])
                 flag=0
             else:
-                nextTime = nextTime + dt.timedelta(minutes=1)
+                nextTime = nextTime + dt.timedelta(seconds=10)
                 dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2, args=[self.target_url])
+                sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2 , args=[target_url])
 
 
     def get_repo_details_by_year(self,repo_name, year):
 
-        total_days = calendar.monthrange(year, month)[1]
+        flag = 1
+        nextTime=''
+        for month in range(1,13):
+            total_days = calendar.monthrange(year, month)[1]
+            for days in range(1, total_days + 1):
+
+                day_obj = datetime.date(year, month, days)
+                target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(
+                    repo_name=repo_name, date=day_obj)
+                if flag == 1:
+                    nextTime = dt.datetime.now() + dt.timedelta(seconds=10)
+                    dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+                    sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=30, args=[target_url])
+                    flag = 0
+                else:
+                    nextTime = nextTime + dt.timedelta(seconds=10)
+                    dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+                    sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=30, args=[target_url])
+
 
 obj=GitRepoApisDetails()
-obj.get_repo_details_by_month("dockerfile",2020,4)
+#obj.get_repo_details_by_month("dockerfile",2020,4)
+obj.get_repo_details_by_year("dockerfile",2019)
+
 sched.start()
 
 
