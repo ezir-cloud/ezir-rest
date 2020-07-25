@@ -2,6 +2,7 @@ import requests
 import calendar
 import datetime
 import datetime as dt
+from datetime import date,timedelta
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 
@@ -15,6 +16,7 @@ class GitRepoApisDetails:
         self.response = requests.get(query_url, headers=headers)
         self.matched_repositories = self.response.json()
         all_repositories_details = []
+
         for repo in self.matched_repositories["items"]:
             repo_details = dict()
             repo_details["id"] = repo.get("id")
@@ -98,10 +100,36 @@ class GitRepoApisDetails:
         self.job_is_get_repo(target_url)
 
 
+    def get_repo_details_by_two_date(self,repo_name, year1,month1,days1,year2,month2,days2):
+
+        start_dt = date(year1, month1, days1)
+        end_dt = date(year2, month2, days2)
+        flag = 1
+        nextTime = ''
+        for dti in self.daterange(start_dt, end_dt):
+
+            day_obj=dti.strftime("%Y-%m-%d")
+            target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(
+                repo_name=repo_name, date=day_obj)
+            if flag == 1:
+                nextTime = dt.datetime.now() + dt.timedelta(seconds=10)
+                dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+                sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=30, args=[target_url])
+                flag = 0
+            else:
+                nextTime = nextTime + dt.timedelta(seconds=10)
+                dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+                sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=30, args=[target_url])
+
+
+    def daterange(self,date1, date2):
+        for n in range(int((date2 - date1).days) + 1):
+            yield date1 + timedelta(n)
+
 obj=GitRepoApisDetails()
-#obj.get_repo_details_by_month("dockerfile",2020,4)
-#obj.get_repo_details_by_year("dockerfile",2019)
-obj.get_repo_details_by_date("dockerfile",2020,4,10)
+
+obj.get_repo_details_by_two_date("dockerfile",2019,1,1,2020,1,31)
+
 sched.start()
 
 
