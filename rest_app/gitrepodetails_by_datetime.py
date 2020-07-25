@@ -15,7 +15,6 @@ class GitRepoApisDetails:
             self.response = requests.get(query_url, headers=headers)
             self.matched_repositories = self.response.json()
 
-            print("hello")
             all_repositories_details = []
             for repo in self.matched_repositories["items"]:
 
@@ -62,7 +61,6 @@ class GitRepoApisDetails:
                 day_obj = datetime.date(year, month, days)
                 self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
 
-                print( self.target_url)
                 if flag==1:
 
                    nextTime = dt.datetime.now() + dt.timedelta(minutes=1)
