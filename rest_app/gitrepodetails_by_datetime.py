@@ -46,7 +46,7 @@ class GitRepoApisDetails:
                 repo_details["watchers"] = repo.get("watchers")
                 all_repositories_details.append(repo_details)
 
-           
+            print(all_repositories_details)
             return all_repositories_details
 
 
@@ -77,7 +77,7 @@ class GitRepoApisDetails:
                     sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2, args=[self.target_url])
 
 
-        def get_repo_details_by_year(self,repo_name,year):
+        def get_repo_details_by_year(self, repo_name, year):
 
             flag = 1
             nextTime = ''
@@ -102,9 +102,22 @@ class GitRepoApisDetails:
                         dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                         sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2,args=[self.target_url])
 
+
+        def  get_repo_by_date(self, repo_name, year , month, date ):
+
+
+            day_obj = datetime.date(year, month, date)
+            self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name, date=day_obj)
+            self.job_is_get_repo(self.target_url)
+            print(day_obj)
+
+
+
 obj=GitRepoApisDetails()
-url=obj.get_repo_details_by_month("dockerfile",2020,2)
-url=obj.get_repo_details_by_year("dockerfile",2019)
+# url=obj.get_repo_details_by_month("dockerfile",2020,2)
+# url=obj.get_repo_details_by_year("dockerfile",2019)
+url=obj.get_repo_by_date("dockerfile", 2020 , 1, 1)
+
 
 try:
     sched.start()
