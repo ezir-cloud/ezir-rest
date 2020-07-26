@@ -15,8 +15,8 @@ class GitRepoApisDetails:
             headers = {'content-type': 'application/json'}
             self.response = requests.get(query_url, headers=headers)
             self.matched_repositories = self.response.json()
-
             all_repositories_details = []
+
             for repo in self.matched_repositories["items"]:
 
                 repo_details = dict()
@@ -46,41 +46,33 @@ class GitRepoApisDetails:
                 repo_details["watchers"] = repo.get("watchers")
                 all_repositories_details.append(repo_details)
 
-
             return all_repositories_details
 
 
         def get_repo_details_by_month(self,repo_name,year,month):
 
-
             total_days=calendar.monthrange(year,month)[1]
             self.total_urls = []
-
 
             for days in range(1,total_days+1):
 
                 day_obj = datetime.date(year, month, days)
                 self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
-
                 self.total_urls.append(self.target_url)
-
             self.add_job_for_githubapi(self.total_urls)
 
 
         def get_repo_details_by_year(self, repo_name, year):
 
             self.total_urls = []
-
             for month in range(1, 13):
 
                 total_days=calendar.monthrange(year,month)[1]
-
                 for days in range(1,total_days+1):
 
                     day_obj = datetime.date(year, month, days)
                     self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
                     self.total_urls.append(self.target_url)
-
             self.add_job_for_githubapi(self.total_urls)
 
 
@@ -97,17 +89,14 @@ class GitRepoApisDetails:
 
                 self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name, date=day_obj)
                 self.total_urls.append(self.target_url)
-
             self.add_job_for_githubapi(self.total_urls)
 
 
         def  get_repo_by_date(self, repo_name, year , month, date ):
 
-
             day_obj = datetime.date(year, month, date)
             self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name, date=day_obj)
             self.job_is_get_repo(self.target_url)
-
 
 
         def add_job_for_githubapi(self, total_urls ):
@@ -118,14 +107,12 @@ class GitRepoApisDetails:
             for url in total_urls:
 
                 if flag == 1:
-
                     nextTime = dt.datetime.now() + dt.timedelta(seconds=5)
                     run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                     sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50 ,args=[url])
                     flag = 0
 
                 else:
-
                     nextTime = nextTime + dt.timedelta(seconds=1)
                     run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                     sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50, args=[url])
