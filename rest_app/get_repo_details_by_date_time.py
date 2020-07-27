@@ -48,6 +48,14 @@ class GitRepoApisDetails:
         print(all_repositories_details)
         return all_repositories_details
 
+    def add_job_by_time(self,target_url,flag,nextTime):
+
+        if flag == 1:
+            dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+            sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, misfire_grace_time=10, args=[target_url])
+        else:
+            dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+            sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, misfire_grace_time=10, args=[target_url])
 
     def get_repo_details_by_month(self,repo_name,year,month):
 
@@ -58,16 +66,14 @@ class GitRepoApisDetails:
 
             day_obj = datetime.date(year, month, days)
             target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
-
             if flag==1:
-                nextTime = dt.datetime.now() + dt.timedelta(seconds=10)
-                dat=dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2 , args=[target_url])
+                nextTime = dt.datetime.now() + dt.timedelta(minutes=1)
+                self.add_job_by_time(target_url,flag,nextTime)
                 flag=0
             else:
-                nextTime = nextTime + dt.timedelta(seconds=10)
-                dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=2 , args=[target_url])
+                nextTime = nextTime + dt.timedelta(minutes=1)
+                self.add_job_by_time(target_url, flag, nextTime)
+
 
 
     def get_repo_details_by_year(self,repo_name, year):
@@ -84,12 +90,12 @@ class GitRepoApisDetails:
                 if flag == 1:
                     nextTime = dt.datetime.now() + dt.timedelta(seconds=10)
                     dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                    sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=30, args=[target_url])
+                    sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, misfire_grace_time=10, args=[target_url])
                     flag = 0
                 else:
                     nextTime = nextTime + dt.timedelta(seconds=10)
                     dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                    sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=30, args=[target_url])
+                    sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, misfire_grace_time=10, args=[target_url])
 
 
     def get_repo_details_by_date(self,repo_name,year,month,days):
@@ -115,19 +121,19 @@ class GitRepoApisDetails:
             if flag == 1:
                 nextTime = dt.datetime.now() + dt.timedelta(seconds=10)
                 dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=30, args=[target_url])
+                sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, misfire_grace_time=10, args=[target_url])
                 flag = 0
             else:
                 nextTime = nextTime + dt.timedelta(seconds=10)
                 dat = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, max_instances=30, args=[target_url])
+                sched.add_job(obj.job_is_get_repo, 'date', run_date=dat, misfire_grace_time=10, args=[target_url])
 
 
 obj=GitRepoApisDetails()
-#obj.get_repo_details_by_month("dockerfile",2020,4)
+obj.get_repo_details_by_month("dockerfile",2020,4)
 #obj.get_repo_details_by_year("dockerfile",2019)
 #obj.get_repo_details_by_date("dockerfile",2020,4,10)
-obj.get_repo_details_by_two_date("dockerfile",2019,1,1,2020,1,31)
+#obj.get_repo_details_by_two_date("dockerfile",2019,1,1,2020,1,31)
 sched.start()
 
 
