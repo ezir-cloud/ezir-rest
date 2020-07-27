@@ -45,6 +45,7 @@ class GitRepoApisDetails:
             repo_details["watchers"] = repo.get("watchers")
             all_repositories_details.append(repo_details)
 
+        #print("hi")
         print(all_repositories_details)
         return all_repositories_details
 
