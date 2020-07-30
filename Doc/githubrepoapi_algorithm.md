@@ -77,8 +77,14 @@ https://api.github.com/search/repositories?q=java+created:2020-01-01T14:02:00Z..
 
 * Every url which is used to search the results in the github is passed in function arguments.Each function call by job.  
 Every job is scheduled by one min. The job details are saved in sqlite database using sqlalchemy. Table name is    
-githubapijob . columns are JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus, Joblog, previousjobid.         
+githubapijob . columns are JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus, Joblog, previousjobid.      
 
+
+* Pass job id in add.job argument and use job id to job function if api work properly then job status is complete.     
+if job is not complete the api response add in gob log and got status is fail and create new job the old job id is      
+stored in previousjobid column.   
+
+ 
 Column of githubapijob table    
 JobId : every job has a unique id.     
 JobType : job type is github api    
