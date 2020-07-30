@@ -17,13 +17,13 @@ Session_macker = sessionmaker( bind= Engine)
 session = Session_macker()
 
 # JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus, Joblog, previousjobid.
-class githubrepoapi(Base):
-    __tablename__ = 'githubrepoapi'
-    JobId          = Column(String(200))
+class job_details_by_githubapi(Base):
+    __tablename__ = 'job_details_by_githubapi'
+    JobId          = Column(String(200),  primary_key=True)
     JobType        = Column(String(200))
     CreatedAt      = Column(String(200))
     UpdatedAt      = Column(String(200))
-    JobObject      = Column(String(200), primary_key=True)
+    JobObject      = Column(String(200))
     Jobstatus      = Column(String(200))
     Joblog         = Column(String(200))
     previousjobid  = Column(String(200))
@@ -31,30 +31,17 @@ class githubrepoapi(Base):
 Base.metadata.create_all(Engine)
 
 
-
 sched = BlockingScheduler()
 
 class GitRepoApisDetails:
 
-        def job_is_get_repo(self,query_url, jobid, nextTime):
-
-
+        def job_is_get_repo(self,query_url):
 
             headers = {'content-type': 'application/json'}
             self.response = requests.get(query_url, headers=headers)
             self.matched_repositories = self.response.json()
 
-            github_api = githubrepoapi(JobId= jobid, JobType='github', CreatedAt=nextTime, UpdatedAt='30-07-20',
-                                                Jobstatus='complete', Joblog='log', previousjobid='0')
-
-            print(githubrepoapi)
-
-            session.add(github_api)
-            session.commit()
-
-
             all_repositories_details = []
-
             for repo in self.matched_repositories["items"]:
 
                 repo_details = dict()
@@ -119,49 +106,53 @@ class GitRepoApisDetails:
             flag = 1
             nextTime = ''
 
-            count = 0
             for url in total_urls:
-
-                count = count+1
-                jobid = "job_{job}".format(job=count )
 
                 if flag == 1:
 
                     nextTime = dt.datetime.now() + dt.timedelta(seconds=5)
                     run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                    sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50 ,args=[url, jobid, nextTime])
+                    sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50 ,args=[url])
 
-                    job_details = {}
+                    total_job_id = {}
+                    for job in sched.get_jobs():
+                        total_job_id['id'] = "%s" % job.id
 
+                    job_object_details = {}
                     for job in sched.get_jobs():
 
-                        job_details['name'] = "%s" % job.name
-                        job_details['trigger'] = "%s" % job.trigger
+                        job_object_details['name'] = "%s" % job.name
+                        job_object_details['trigger'] = "%s" % job.trigger
 
-                    job_details_json = json.dumps(job_details)
+                    job_details_json = json.dumps(job_object_details)
                     print(job_details_json)
 
-                    job_obj_add = githubrepoapi(JobObject= job_details_json)
-                    session.add(job_obj_add)
+                    github_api = job_details_by_githubapi(JobId=jobid, JobType='github', CreatedAt=nextTime,
+                                                          UpdatedAt='30-07-20',JobObject= job_details_json,
+                                                          Jobstatus='complete', Joblog='log', previousjobid='0')
+
+                    print(job_details_by_githubapi)
+
+                    session.add(github_api)
                     session.commit()
+
                     flag = 0
 
                 else:
 
                     nextTime = nextTime + dt.timedelta(seconds=5)
                     run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                    sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50, args=[url, jobid, nextTime])
+                    sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50, args=[url])
                     job_details = {}
 
                     for job in sched.get_jobs():
                         job_details['name'] = "%s" % job.name
                         job_details['trigger'] = "%s" % job.trigger
 
-
                     job_details_json = json.dumps(job_details)
                     print(job_details_json)
 
-                    job_obj_add = githubrepoapi(JobObject=job_details_json)
+                    job_obj_add = job_details_by_githubapi(JobObject=job_details_json)
                     session.add(job_obj_add)
                     session.commit()
 
