@@ -37,6 +37,7 @@ class GitRepoApisDetails:
 
         def job_is_get_repo(self,query_url):
 
+            print('hello')
             headers = {'content-type': 'application/json'}
             self.response = requests.get(query_url, headers=headers)
             self.matched_repositories = self.response.json()
@@ -74,17 +75,19 @@ class GitRepoApisDetails:
             return all_repositories_details
 
 
-        def get_repo_details_by_month(self,repo_name,year,month):
+        def get_repo_details_by_month(self,repo_name,year_for_repo,month_for_repo,year,month,day,hour,min,sec=00):
 
-            total_days=calendar.monthrange(year,month)[1]
+            total_days=calendar.monthrange(year_for_repo,month_for_repo)[1]
             self.total_urls = []
 
             for days in range(1,total_days+1):
 
-                day_obj = datetime.date(year, month, days)
+                day_obj = datetime.date(year_for_repo, month_for_repo, days)
                 self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
                 self.total_urls.append(self.target_url)
-            self.add_job_for_githubapi(self.total_urls)
+
+            x = datetime.datetime(year, month, day, hour, min, sec)
+            self.add_job_for_githubapi(self.total_urls,x)
 
 
         def get_repo_details_by_year(self, repo_name, year):
@@ -100,8 +103,14 @@ class GitRepoApisDetails:
                     self.total_urls.append(self.target_url)
             self.add_job_for_githubapi(self.total_urls)
 
+        #total_urls
+        def add_job_for_githubapi(self,total_urls,job_date):
 
-        def add_job_for_githubapi(self, total_urls ):
+
+            print(job_date)
+            print(datetime.datetime.now())
+            print()
+            print()
 
             flag = 1
             nextTime = ''
@@ -110,9 +119,15 @@ class GitRepoApisDetails:
 
                 if flag == 1:
 
-                    nextTime = dt.datetime.now() + dt.timedelta(seconds=5)
+                    nextTime = job_date + dt.timedelta(seconds=10)
+                    #nextTime = dt.datetime.now() + dt.timedelta(seconds=5)
                     run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                    object=sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50 ,args=[url])
+                    print('if')
+
+                    print(run_date)
+
+                    job_object=sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50 ,args=[url])
+                    print(job_object.id)
 
                     job_object_details = {}
                     for job in sched.get_jobs():
@@ -124,7 +139,7 @@ class GitRepoApisDetails:
                     print(job_details_json)
 
 
-                    github_api = job_details_by_githubapi(JobId=object.id, JobType='github', CreatedAt=nextTime,UpdatedAt='30-07-20',JobObject= job_details_json,Jobstatus='complete', Joblog='log', previousjobid='0')
+                    github_api = job_details_by_githubapi(JobId=job_object.id, JobType='github', CreatedAt=nextTime,UpdatedAt='30-07-20',JobObject= job_details_json,Jobstatus='complete', Joblog='log', previousjobid='0')
 
                     # print(job_details_by_githubapi)
                     session.add(github_api)
@@ -134,10 +149,14 @@ class GitRepoApisDetails:
 
                 else:
 
-                    nextTime = nextTime + dt.timedelta(seconds=5)
+                    nextTime = nextTime + dt.timedelta(seconds=10)
                     run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                    object=sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50, args=[url])
+                    print('else')
 
+                    print(run_date)
+                    job_object=sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50, args=[url])
+
+                    print(job_object.id)
                     job_details = {}
 
                     for job in sched.get_jobs():
@@ -147,7 +166,7 @@ class GitRepoApisDetails:
                     job_details_json = json.dumps(job_details)
                     print(job_details_json)
 
-                    github_api = job_details_by_githubapi(JobId=object.id, JobType='github', CreatedAt=nextTime,
+                    github_api = job_details_by_githubapi(JobId=job_object.id, JobType='github', CreatedAt=nextTime,
                                                           UpdatedAt='30-07-20', JobObject=job_details_json,
                                                           Jobstatus='complete', Joblog='log', previousjobid='0')
 
@@ -156,7 +175,11 @@ class GitRepoApisDetails:
 
 
 obj=GitRepoApisDetails()
-url=obj.get_repo_details_by_month("dockerfile",2020,2)
+url=obj.get_repo_details_by_month("dockerfile",2020,2,2020,7,31,13,17)
+
+#obj.add_job_for_githubapi(2020,7,31,12,30)
+
+
 try:
     sched.start()
 except (Exception):
