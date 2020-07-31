@@ -17,18 +17,19 @@ Session_macker = sessionmaker( bind= Engine)
 session = Session_macker()
 
 # JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus, Joblog, previousjobid.
-class job_details_by_githubapi(Base):
-    __tablename__ = 'job_details_by_githubapi'
-    JobId          = Column(String(200),  primary_key=True)
+class githubrepoapi(Base):
+    __tablename__ = 'githubrepoapi'
+    JobId          = Column(String(200))
     JobType        = Column(String(200))
     CreatedAt      = Column(String(200))
     UpdatedAt      = Column(String(200))
-    JobObject      = Column(String(200))
+    JobObject      = Column(String(200), primary_key=True)
     Jobstatus      = Column(String(200))
     Joblog         = Column(String(200))
     previousjobid  = Column(String(200))
 
-Base.metadata.create_all(Engine)
+# Base.metadata.create_all(Engine)
+
 
 
 sched = BlockingScheduler()
@@ -37,11 +38,14 @@ class GitRepoApisDetails:
 
         def job_is_get_repo(self,query_url):
 
+
+
             headers = {'content-type': 'application/json'}
             self.response = requests.get(query_url, headers=headers)
             self.matched_repositories = self.response.json()
 
             all_repositories_details = []
+
             for repo in self.matched_repositories["items"]:
 
                 repo_details = dict()
@@ -79,6 +83,8 @@ class GitRepoApisDetails:
             total_days=calendar.monthrange(year,month)[1]
             self.total_urls = []
 
+
+
             for days in range(1,total_days+1):
 
                 day_obj = datetime.date(year, month, days)
@@ -101,64 +107,40 @@ class GitRepoApisDetails:
             self.add_job_for_githubapi(self.total_urls)
 
 
-        def add_job_for_githubapi(self, total_urls ):
+        def add_job_for_githubapi(self, year, month, day, hour, mint, sec):
+
+            job_run_data_time =dt.timedelta(seconds=20)
+            print(job_run_data_time)
+            # job_date_time_increase = job_run_data_time + job_run_data_time
+            # print(job_date_time_increase)
+            datetime_as_integer = job_run_data_time + 20
+            print(datetime_as_integer)
+            create_datatime = datetime.datetime(year, month, day, hour, mint, sec) +job_run_data_time
+            print(create_datatime)
 
             flag = 1
-            nextTime = ''
-
-            for url in total_urls:
-
-                if flag == 1:
-
-                    nextTime = dt.datetime.now() + dt.timedelta(seconds=5)
-                    run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                    sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50 ,args=[url])
-
-                    total_job_id = {}
-                    for job in sched.get_jobs():
-                        total_job_id['id'] = "%s" % job.id
-
-                    job_object_details = {}
-                    for job in sched.get_jobs():
-
-                        job_object_details['name'] = "%s" % job.name
-                        job_object_details['trigger'] = "%s" % job.trigger
-
-                    job_details_json = json.dumps(job_object_details)
-                    print(job_details_json)
-
-                    github_api = job_details_by_githubapi(JobId=jobid, JobType='github', CreatedAt=nextTime,
-                                                          UpdatedAt='30-07-20',JobObject= job_details_json,
-                                                          Jobstatus='complete', Joblog='log', previousjobid='0')
-
-                    print(job_details_by_githubapi)
-
-                    session.add(github_api)
-                    session.commit()
-
-                    flag = 0
-
-                else:
-
-                    nextTime = nextTime + dt.timedelta(seconds=5)
-                    run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-                    sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50, args=[url])
-                    job_details = {}
-
-                    for job in sched.get_jobs():
-                        job_details['name'] = "%s" % job.name
-                        job_details['trigger'] = "%s" % job.trigger
-
-                    job_details_json = json.dumps(job_details)
-                    print(job_details_json)
-
-                    job_obj_add = job_details_by_githubapi(JobObject=job_details_json)
-                    session.add(job_obj_add)
-                    session.commit()
+            # for url in range(1, 31):
 
 
+                # if flag == 1:
+                    # print("if")
+
+                    # new_datatime = create_datatime
+                    # print(new_datatime)
+                    # sched.add_job(obj.job_is_get_repo, 'date', run_date=create_datatime,  misfire_grace_time=50 ,args=[url])
+                    # flag = 0
+                # else:
+                    # print(flag)
+                    # print(new_datatime)
+                    # print("else")
+                    #
+                    # new_datatime = create_datatime + dt.timedelta(seconds=40)
+                    # update_datatime = new_datatime
+                    # print(new_datatime)
+                    # return_job_obj=sched.add_job(obj.job_is_get_repo, 'date', run_date=create_datatime,  misfire_grace_time=50, args=[url])
 obj=GitRepoApisDetails()
-url=obj.get_repo_details_by_month("dockerfile",2020,2)
+# url=obj.get_repo_details_by_month("dockerfile",2020,2)
+job_by_date = obj.add_job_for_githubapi(2020, 7, 31, 22, 4, 00)
 try:
     sched.start()
 except (Exception):
