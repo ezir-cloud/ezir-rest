@@ -139,10 +139,16 @@ class GitRepoApisDetails:
             new_release_date = dt.datetime.strftime(release_date, "%Y-%m-%d %H:%M:%S")
             relase_at=dt.datetime(2013 , 12 , 21)
             new_release_at = dt.datetime.strftime(relase_at, "%Y-%m-%d %H:%M:%S")
+            current_date=dt.datetime.now()
+            new_current_date = dt.datetime.strftime(current_date, "%Y-%m-%d %H:%M:%S")
 
             if new_release_date < new_release_at:
 
                 print("The first public beta version of Docker Compose (version 0.0.1) was released on December 21, 2013.So please enter valid date")
+
+            elif new_release_date > new_current_date:
+
+                print('you cant get future dockerfile details')
 
             else:
 
@@ -237,7 +243,7 @@ class GitRepoApisDetails:
 
 
 obj=GitRepoApisDetails()
-url=obj.get_repo_details_by_month("dockerfile",2013,12,21,2020,8,2,13,22)
+url=obj.get_repo_details_by_month("dockerfile",2020,8,2,2020,8,2,13,50)
 
 try:
     sched.start()
