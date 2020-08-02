@@ -86,21 +86,28 @@ stored in previousjobid column.
 
  
 Column of githubapijob table    
-JobId : every job has a unique id.     
-JobType : job type is github api    
-CreatedAt : when url is passed as argument to that time store in CreatedAt.    
-UpdatedAt : This is the update time of the job.    
-JobObject : The job object is serialized.    
-Jobstatus : Jobstatus are running, completed and fail. When a job fail it retry after completing all jobs.     
-Joblog    : joblog column has four things. First  job complete, successful status.second  If  Api calls, the total count   
-is zero then this statement is store in log.  {   
-  "total_count": 0,    
-  "incomplete_results": false,   
-  "items": [   
-   
-  ]   
-}     
-Third, use a job using try and exception. If a job fails then the exception is stored in the logjob column.        
+`JobId` : every job has a unique id.     
+`JobType` : job type is github api    
+`CreatedAt` : when url is passed as argument to that time store in CreatedAt.    
+`UpdatedAt` : This is the update time of the job.    
+`JobObject` : The job object is serialized.    
+`Jobstatus` : Jobstatus are running, completed and fail. When a job fail it retry after completing all jobs. jo fail condition    
+              ```1. if network connection is fail.           
+              2. if api request docker repository for future days eg . docker repository month 10 which is future.         
+              3. if api request docker repository for past days where no docker repository is not available.            
+              eg 2012 where docker repository is not available.             
+               ```   
+`Joblog`    : joblog column has four things.    
+                ```
+                First  job complete, successful status.  
+                second  If  Api calls, the total count is zero then this statement is store in log. 
+                {     
+                "total_count": 0,    
+                "incomplete_results": false,   
+                "items": [   ]   
+                }     
+                Third, use a job using try and exception. If a job fails then the exception is stored in the logjob column.  
+                ```        
 previousjobid: first job id is 1. if first job is fail. then it create new job  with job id 2. if second job is fail then    
 create new job with job id 3. These records are in  previousjobid column.   
  
