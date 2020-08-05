@@ -6,7 +6,7 @@ import uuid
 import requests
 
 from apscheduler.schedulers.blocking import BlockingScheduler
-from sqlalchemy import create_engine, Column, String
+from sqlalchemy import create_engine, Column, String, Integer
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from requests.exceptions import ConnectionError
@@ -21,23 +21,24 @@ Session_macker = sessionmaker( bind= Engine)
 session = Session_macker()
 
 class job_details_by_githubapi(Base):
-    __tablename__ = 'job_details_by_githubapi'
-    JobId          = Column(String(200),  primary_key=True)
-    JobType        = Column(String(200))
-    CreatedAt      = Column(String(200))
-    UpdatedAt      = Column(String(200))
-    JobObject      = Column(String(200))
-    Jobstatus      = Column(String(200))
-    Joblog         = Column(String(500))
-    previousjobid  = Column(String(200))
+    __tablename__     = 'job_details_by_githubapi'
+    JobId             = Column(String(200),  primary_key=True)
+    JobType           = Column(String(200))
+    CreatedAt         = Column(String(200))
+    UpdatedAt         = Column(String(200))
+    JobObject         = Column(String(200))
+    Jobstatus         = Column(String(200))
+    Joblog            = Column(String(500))
+    previousjobid     = Column(String(200))
+    retry_failed_jobs = Column(Integer)
 
 Base.metadata.create_all(Engine)
 
 class GitRepoApisDetails:
 
     def job_is_get_repo(self,query_url, job_id):
-        try:
 
+        try:
             headers = {'content-type': 'application/json'}
             self.response = requests.get(query_url, headers=headers)
             self.matched_repositories = self.response.json()
@@ -140,38 +141,59 @@ class GitRepoApisDetails:
 
         github_repo_api = job_details_by_githubapi(JobId=uid, JobType='github', CreatedAt=run_date,
                                                    UpdatedAt='', JobObject=job_details_json,
-                                                   Jobstatus='pending', Joblog='job log', previousjobid='0')
+                                                   Jobstatus='pending', Joblog='job log', previousjobid='0' ,
+                                                   retry_failed_jobs = 0)
         session.add(github_repo_api)
         session.commit()
 
-    def re_add_fail_jobs(self, query_url, job_id ):
+    def re_add_fail_jobs(self, query_url, job_id):
 
         uid = uuid.uuid4().hex
         select_job_details = session.query(job_details_by_githubapi).order_by(desc(job_details_by_githubapi.CreatedAt))
-        select_one_job = select_job_details.first()
-        last_job_datetime = select_one_job.CreatedAt
+        get_last_job_details = select_job_details.first()
+        last_job_datetime = get_last_job_details.CreatedAt
 
-        date_time_obj = dt.datetime.strptime(last_job_datetime, "%Y-%m-%d %H:%M:%S")
-        nextTime = date_time_obj + dt.timedelta(seconds=10)
-        run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+        select_failed_job_by_jobid = session.query(job_details_by_githubapi).filter(job_details_by_githubapi.JobId == job_id)
+        get_failed_job_details     = select_failed_job_by_jobid.first()
+        get_retry_job              = get_failed_job_details.retry_failed_jobs
+        count_retry_job            = get_retry_job + 1
 
-        sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date, misfire_grace_time=10, args=[query_url, uid], id=uid)
 
-        job_details = {}
-        for job in sched.get_jobs():
-            job_details['name'] = "%s" % job.name
-            job_details['trigger'] = "%s" % job.trigger
-        job_details_json = json.dumps(job_details)
+        if count_retry_job  > 3:
 
-        github_repo_api = job_details_by_githubapi(JobId=uid, JobType='github', CreatedAt=run_date,
-                                                   UpdatedAt='', JobObject=job_details_json,
-                                                   Jobstatus='pending', Joblog='job log', previousjobid=job_id)
-        session.add(github_repo_api)
-        session.commit()
+            print("retry job more then 3 time ")
+            session.query(job_details_by_githubapi).filter(job_details_by_githubapi.JobId == job_id).update(
+                {job_details_by_githubapi.Jobstatus: 'This job retry more then 3 time',
+                 job_details_by_githubapi.Joblog: str(self.matched_repositories),
+                 job_details_by_githubapi.retry_failed_jobs: count_retry_job},
+                synchronize_session=False)
+            session.commit()
 
+        else:
+            print(" retry job less then 3 time")
+            date_time_obj = dt.datetime.strptime(last_job_datetime, "%Y-%m-%d %H:%M:%S")
+            nextTime = date_time_obj + dt.timedelta(seconds=10)
+            run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+
+            sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date, misfire_grace_time=10, args=[query_url, uid],
+                          id=uid)
+
+            job_details = {}
+            for job in sched.get_jobs():
+                job_details['name'] = "%s" % job.name
+                job_details['trigger'] = "%s" % job.trigger
+            job_details_json = json.dumps(job_details)
+
+            github_repo_api = job_details_by_githubapi(JobId=uid, JobType='github', CreatedAt=run_date,
+                                                       UpdatedAt='', JobObject=job_details_json,
+                                                       Jobstatus=" retry job less then 3 time", Joblog='job log',
+                                                       previousjobid=job_id,
+                                                       retry_failed_jobs=count_retry_job)
+            session.add(github_repo_api)
+            session.commit()
 
 obj=GitRepoApisDetails()
 # (file_name, file_created_year, file_created_month,job_year, job_month, job_day, job_hr, job_min, job_sec,  job_interval_count):
-obj.get_repo_details_by_month("dockerfile", 2020, 4, 2020, 8, 5, 19, 6, 50, 10)
+obj.get_repo_details_by_month("dockerfile", 2020, 4, 2020, 8, 5, 23, 59, 00, 1)
 
 sched.start()
