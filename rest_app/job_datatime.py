@@ -9,6 +9,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from sqlalchemy import create_engine, Column, String
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from requests.exceptions import ConnectionError
 from sqlalchemy import desc
 
 
@@ -96,7 +97,7 @@ class GitRepoApisDetails:
                 {job_details_by_githubapi.Jobstatus: 'not_completed',
                  job_details_by_githubapi.Joblog: str(exception_msg)}, synchronize_session=False)
             session.commit()
-
+            self.re_add_fail_jobs(query_url, job_id)
 
 
     def get_repo_details_by_month(self,file_name, file_created_year, file_created_month,  job_year, job_month, job_day, job_hr, job_min, job_sec,  job_interval_count):
@@ -146,12 +147,18 @@ class GitRepoApisDetails:
         session.add(github_repo_api)
         session.commit()
 
+    def re_add_fail_jobs(self, job_id, query_url ):
 
-
+        print(job_id)
+        print(query_url)
+        select_job_details = session.query(job_details_by_githubapi).order_by(desc(job_details_by_githubapi.CreatedAt))
+        select_one_job = select_job_details.first()
+        last_job_datetime = select_one_job.CreatedAt
+        print(last_job_datetime)
 
 
 obj=GitRepoApisDetails()
 # (file_name, file_created_year, file_created_month,job_year, job_month, job_day, job_hr, job_min, job_sec,  job_interval_count):
-obj.get_repo_details_by_month("dockerfile", 2020, 4, 2020, 8, 5, 17, 45, 50, 6)
+obj.get_repo_details_by_month("dockerfile", 2020, 4, 2020, 8, 5, 18, 11, 10, 6)
 
 sched.start()
