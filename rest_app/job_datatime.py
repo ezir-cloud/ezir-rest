@@ -36,9 +36,6 @@ Base.metadata.create_all(Engine)
 class GitRepoApisDetails:
 
     def job_is_get_repo(self,query_url, job_id):
-        print(query_url)
-        print(job_id)
-
         try:
 
             headers = {'content-type': 'application/json'}
@@ -147,18 +144,34 @@ class GitRepoApisDetails:
         session.add(github_repo_api)
         session.commit()
 
-    def re_add_fail_jobs(self, job_id, query_url ):
+    def re_add_fail_jobs(self, query_url, job_id ):
 
-        print(job_id)
-        print(query_url)
+        uid = uuid.uuid4().hex
         select_job_details = session.query(job_details_by_githubapi).order_by(desc(job_details_by_githubapi.CreatedAt))
         select_one_job = select_job_details.first()
         last_job_datetime = select_one_job.CreatedAt
-        print(last_job_datetime)
+
+        date_time_obj = dt.datetime.strptime(last_job_datetime, "%Y-%m-%d %H:%M:%S")
+        nextTime = date_time_obj + dt.timedelta(seconds=10)
+        run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+
+        sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date, misfire_grace_time=10, args=[query_url, uid], id=uid)
+
+        job_details = {}
+        for job in sched.get_jobs():
+            job_details['name'] = "%s" % job.name
+            job_details['trigger'] = "%s" % job.trigger
+        job_details_json = json.dumps(job_details)
+
+        github_repo_api = job_details_by_githubapi(JobId=uid, JobType='github', CreatedAt=run_date,
+                                                   UpdatedAt='', JobObject=job_details_json,
+                                                   Jobstatus='pending', Joblog='job log', previousjobid=job_id)
+        session.add(github_repo_api)
+        session.commit()
 
 
 obj=GitRepoApisDetails()
 # (file_name, file_created_year, file_created_month,job_year, job_month, job_day, job_hr, job_min, job_sec,  job_interval_count):
-obj.get_repo_details_by_month("dockerfile", 2020, 4, 2020, 8, 5, 18, 11, 10, 6)
+obj.get_repo_details_by_month("dockerfile", 2020, 4, 2020, 8, 5, 19, 6, 50, 10)
 
 sched.start()
