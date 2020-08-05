@@ -13,6 +13,7 @@ import uuid
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 
+
 Engine = create_engine('sqlite:///github_repo_job_details.sqlite')
 Base = declarative_base()
 Session_macker = sessionmaker( bind= Engine)
@@ -39,6 +40,7 @@ class GitRepoApisDetails:
 
         previousjobid=''
         flag1=0
+        job_failed_id=dict()
         def job_is_get_repo(self,query_url,job_id):
 
             try:
@@ -48,6 +50,7 @@ class GitRepoApisDetails:
                 self.response = requests.get(query_url, headers=headers)
                 self.matched_repositories = self.response.json()
 
+                print(self.matched_repositories['total_count'])
                 if self.matched_repositories['total_count']==0:
 
                     if GitRepoApisDetails.flag1==0:
@@ -62,6 +65,62 @@ class GitRepoApisDetails:
                         session.query(job_details_by_githubapi).filter(job_details_by_githubapi.JobId == job_id).update({job_details_by_githubapi.Jobstatus:'completed',job_details_by_githubapi.Joblog:str(self.matched_repositories),job_details_by_githubapi.previousjobid:GitRepoApisDetails.previousjobid},synchronize_session=False)
                         GitRepoApisDetails.previousjobid = job_id
                         session.commit()
+
+                elif self.matched_repositories['total_count']>17:
+
+                        self.job_failed_id.update({job_id:query_url})
+                        # i = query_url.rfind(":")
+                        #
+                        # year = int(query_url[i + 1:i + 5])
+                        # month = int(query_url[i + 6:i + 8])
+                        # day = int(query_url[i + 9:i + 11])
+                        #
+                        # x = query_url.rfind("=")
+                        # z = query_url.rfind("+")
+                        # repo_name = query_url[x + 1:z]
+                        #
+                        # repo_date1 = dt.datetime(year, month, day)
+                        #
+                        # new_date1 = ''
+                        # new_date2 = ''
+                        # flag = False
+                        # all_url_links=[]
+                        # for i in range(24):
+                        #     if flag == False:
+                        #
+                        #         new_date1 = repo_date1 + dt.timedelta(seconds=0)
+                        #         first_date_is = dt.datetime.strftime(new_date1, "%Y-%m-%d")
+                        #         first_time_is = dt.datetime.strftime(new_date1, "%H:%M:%S")
+                        #
+                        #         new_date2 = repo_date1 + dt.timedelta(hours=1)
+                        #         second_date_is = dt.datetime.strftime(new_date2, "%Y-%m-%d")
+                        #         second_time_is = dt.datetime.strftime(new_date2, "%H:%M:%S")
+                        #
+                        #         target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{first_date_is}T{first_time_is}..{second_date_is}T{second_time_is}".format(
+                        #             repo_name=repo_name, first_date_is=first_date_is, first_time_is=first_time_is,
+                        #             second_date_is=second_date_is, second_time_is=second_time_is)
+                        #
+                        #         all_url_links.append(target_url)
+                        #
+                        #         flag = True
+                        #
+                        #     else:
+                        #
+                        #         first_date_is = dt.datetime.strftime(new_date2, "%Y-%m-%d")
+                        #         first_time_is = dt.datetime.strftime(new_date2, "%H:%M:%S")
+                        #
+                        #         new_date2 = new_date2 + dt.timedelta(hours=1)
+                        #         second_date_is = dt.datetime.strftime(new_date2, "%Y-%m-%d")
+                        #         second_time_is = dt.datetime.strftime(new_date2, "%H:%M:%S")
+                        #
+                        #         target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{first_date_is}T{first_time_is}..{second_date_is}T{second_time_is}".format(
+                        #             repo_name=repo_name, first_date_is=first_date_is, first_time_is=first_time_is,
+                        #             second_date_is=second_date_is, second_time_is=second_time_is)
+                        #
+                        #         all_url_links.append(target_url)
+
+
+                        #self.add_job_for_githubapi(all_url_links,datetime.datetime.now())
 
                 else:
 
@@ -133,20 +192,24 @@ class GitRepoApisDetails:
                     GitRepoApisDetails.previousjobid = job_id
                     session.commit()
 
+        def get_failed_job_id(self):
+
+            return self.job_failed_id
+
         def get_repo_details_by_month(self,repo_name,year_for_repo,month_for_repo,day_for_repo,year,month,day,hour,min,sec=00):
 
-            release_date=dt.datetime(year_for_repo, month_for_repo,day_for_repo)
-            new_release_date = dt.datetime.strftime(release_date, "%Y-%m-%d %H:%M:%S")
-            relase_at=dt.datetime(2013 , 12 , 21)
+            user_date = dt.datetime(year_for_repo, month_for_repo,day_for_repo)
+            new_user_date = dt.datetime.strftime(user_date, "%Y-%m-%d %H:%M:%S")
+            relase_at = dt.datetime(2013 , 12 , 21)
             new_release_at = dt.datetime.strftime(relase_at, "%Y-%m-%d %H:%M:%S")
-            current_date=dt.datetime.now()
+            current_date = dt.datetime.now()
             new_current_date = dt.datetime.strftime(current_date, "%Y-%m-%d %H:%M:%S")
 
-            if new_release_date < new_release_at:
+            if new_user_date < new_release_at:
 
                 print("The first public beta version of Docker Compose (version 0.0.1) was released on December 21, 2013.So please enter valid date")
 
-            elif new_release_date > new_current_date:
+            elif new_user_date > new_current_date:
 
                 print('you cant get future dockerfile details')
 
@@ -161,37 +224,20 @@ class GitRepoApisDetails:
 
                     print("please enter valid datetime to set job runtime")
 
-                elif new_current_time == new_job_run_time:
-
-                    print("please enter valid datetime to set job runtime")
-
                 else:
 
                     total_days=calendar.monthrange(year_for_repo,month_for_repo)[1]
                     self.total_urls = []
 
-                    for days in range(1,total_days+1):
+                    for days in range(day_for_repo,total_days+1):
 
                         day_obj = datetime.date(year_for_repo, month_for_repo, days)
                         self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
                         self.total_urls.append(self.target_url)
 
                     x = datetime.datetime(year, month, day, hour, min, sec)
-                    self.add_job_for_githubapi(self.total_urls,x)
+                    self.add_job_for_githubapi(self.total_urls, x)
 
-
-        def get_repo_details_by_year(self, repo_name, year):
-
-            self.total_urls = []
-            for month in range(1, 13):
-
-                total_days=calendar.monthrange(year,month)[1]
-                for days in range(1,total_days+1):
-
-                    day_obj = datetime.date(year, month, days)
-                    self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
-                    self.total_urls.append(self.target_url)
-            self.add_job_for_githubapi(self.total_urls)
 
 
         def add_job_for_githubapi(self,total_urls,job_date):
@@ -243,9 +289,16 @@ class GitRepoApisDetails:
 
 
 obj=GitRepoApisDetails()
-url=obj.get_repo_details_by_month("dockerfile",2020,8,2,2020,8,2,13,50)
-
+url=obj.get_repo_details_by_month("dockerfile",2020,7,1,2020,8,4,20,59)
 try:
     sched.start()
 except (Exception):
     pass
+
+sched.shutdown(wait=False)
+
+a=obj.get_failed_job_id()
+for k,v in a:
+    print('job_id:',k)
+    print('url',v)
+
