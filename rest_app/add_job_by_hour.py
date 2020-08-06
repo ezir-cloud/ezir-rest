@@ -69,8 +69,8 @@ class GitRepoApisDetails:
 
                 repo_date1 = dt.datetime(year, month, day)
 
-                new_date1 = ''
-                new_date2 = ''
+
+                last_datetime = ''
                 flag = True
 
                 for i in range(24):
@@ -78,17 +78,16 @@ class GitRepoApisDetails:
                     uid = uuid.uuid4().hex
                     if flag == True:
 
-                        new_date1 = repo_date1 + dt.timedelta(seconds=0)
-                        first_date_is = dt.datetime.strftime(new_date1, "%Y-%m-%d")
-                        first_time_is = dt.datetime.strftime(new_date1, "%H:%M:%S")
+                        start_datetime = repo_date1 + dt.timedelta(seconds=0)
+                        date_created = dt.datetime.strftime(start_datetime, "%Y-%m-%d")
+                        start_time = dt.datetime.strftime(start_datetime, "%H:%M:%S")
 
-                        new_date2 = repo_date1 + dt.timedelta(hours=1)
-                        second_date_is = dt.datetime.strftime(new_date2, "%Y-%m-%d")
-                        second_time_is = dt.datetime.strftime(new_date2, "%H:%M:%S")
+                        last_datetime = repo_date1 + dt.timedelta(hours=1)
+                        last_time = dt.datetime.strftime(last_datetime, "%H:%M:%S")
 
-                        target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{first_date_is}T{first_time_is}..{second_date_is}T{second_time_is}".format(
-                            repo_name=repo_name, first_date_is=first_date_is, first_time_is=first_time_is,
-                            second_date_is=second_date_is, second_time_is=second_time_is)
+                        target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{start_created_date}T{start_time}..{last_created_date}T{last_time}".format(
+                            repo_name=repo_name, start_created_date=date_created, start_time=start_time,
+                            last_created_date=date_created, last_time=last_time)
 
                         print(target_url)
                         select_job_details = session.query(job_details_by_githubapi).order_by(
@@ -105,16 +104,15 @@ class GitRepoApisDetails:
 
                     else:
 
-                        first_date_is = dt.datetime.strftime(new_date2, "%Y-%m-%d")
-                        first_time_is = dt.datetime.strftime(new_date2, "%H:%M:%S")
+                        date_created = dt.datetime.strftime(last_datetime, "%Y-%m-%d")
+                        start_time = dt.datetime.strftime(last_datetime, "%H:%M:%S")
 
-                        new_date2 = new_date2 + dt.timedelta(hours=1)
-                        second_date_is = dt.datetime.strftime(new_date2, "%Y-%m-%d")
-                        second_time_is = dt.datetime.strftime(new_date2, "%H:%M:%S")
+                        last_datetime = last_datetime + dt.timedelta(hours=1)
+                        last_time = dt.datetime.strftime(last_datetime, "%H:%M:%S")
 
-                        target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{first_date_is}T{first_time_is}..{second_date_is}T{second_time_is}".format(
-                            repo_name=repo_name, first_date_is=first_date_is, first_time_is=first_time_is,
-                            second_date_is=second_date_is, second_time_is=second_time_is)
+                        target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{start_created_date}T{start_time}..{last_created_date}T{last_time}".format(
+                            repo_name=repo_name, start_created_date=date_created, start_time=start_time,
+                            last_created_date=date_created, last_time=last_time)
 
                         print(target_url)
                         select_job_details = session.query(job_details_by_githubapi).order_by(
@@ -239,7 +237,8 @@ class GitRepoApisDetails:
         job_run_time = dt.datetime(job_year, job_month, job_day, job_hr, job_min, job_sec)
         change_job_run_time_format = dt.datetime.strftime(job_run_time, "%Y-%m-%d %H:%M:%S")
 
-        if change_current_time_format > change_job_run_time_format:
+        if  change_job_run_time_format < change_current_time_format :
+
             print("please enter valid datetime to set job runtime")
 
         else:
