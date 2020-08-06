@@ -45,8 +45,18 @@ class GitRepoApisDetails:
             self.total_count= self.matched_repositories.get('total_count')
             print(self.total_count)
 
-            if self.total_count > 25:
+            if self.total_count == None:
+                session.query(job_details_by_githubapi).filter(job_details_by_githubapi.JobId == job_id).update(
+                    {job_details_by_githubapi.Jobstatus: '"API rate limit exceeded',
+                     job_details_by_githubapi.Joblog: str(self.matched_repositories)},
+                    synchronize_session=False)
+                session.commit()
+                self.re_add_failed_jobs(query_url, job_id)
+
+            if self.total_count > 1000:
+
                 self.get_repo_details_by_hour(query_url , job_id)
+
             if self.total_count==0:
                 session.query(job_details_by_githubapi).filter(job_details_by_githubapi.JobId == job_id).update(
                     {job_details_by_githubapi.Jobstatus:'completed', job_details_by_githubapi.Joblog:str (self.matched_repositories)},
@@ -212,19 +222,44 @@ class GitRepoApisDetails:
         end_hour = 0
         for hour in range(0, 23):
 
+            uid = uuid.uuid4().hex
             end_hour = end_hour + 1
             start_time = dt.datetime(year, month, day, hour).time()
             last_time = dt.datetime(year, month, day, end_hour).time()
 
             target_url = select_url_in_qyery_url, "created:{created_date}T{start_time}..{created_date}T{last_time}".format(
-                file_name='Dockerfile', created_date=change_created_date_format, start_time=start_time,
-                last_time=last_time)
+                created_date=change_created_date_format, start_time=start_time, last_time=last_time)
             query_url = ''.join(target_url)
             print(query_url)
 
 
+            select_job_details = session.query(job_details_by_githubapi).order_by(desc(job_details_by_githubapi.CreatedAt))
+            get_last_job_details = select_job_details.first()
+            last_job_datetime = get_last_job_details.CreatedAt
+
+            date_time_obj = dt.datetime.strptime(last_job_datetime, "%Y-%m-%d %H:%M:%S")
+            nextTime = date_time_obj + dt.timedelta(minutes=1)
+            run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+
+            sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date, misfire_grace_time=10, args=[query_url, uid],id=uid)
+
+            job_details = {}
+            for job in sched.get_jobs():
+                job_details['name'] = "%s" % job.name
+                job_details['trigger'] = "%s" % job.trigger
+            job_details_json = json.dumps(job_details)
+
+            github_repo_api = job_details_by_githubapi(JobId=uid, JobType='github', CreatedAt=run_date,
+                                                       UpdatedAt='', JobObject=job_details_json,
+                                                       Jobstatus=" Total count is more then 1000", Joblog='job log',
+                                                       previousjobid=0,
+                                                       retry_failed_jobs=0)
+            session.add(github_repo_api)
+            session.commit()
+
+
 obj=GitRepoApisDetails()
 # (file_name, file_created_year, file_created_month,job_year, job_month, job_day, job_hr, job_min, job_sec,  job_interval_count):
-obj.get_repo_details_by_month("dockerfile", 2020, 4, 2020, 8, 6, 15, 52, 00, 55)
+obj.get_repo_details_by_month("dockerfile", 2020, 4, 2020, 8, 6, 17, 20, 45, 1)
 
 sched.start()
