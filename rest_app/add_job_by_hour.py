@@ -55,79 +55,9 @@ class GitRepoApisDetails:
                     synchronize_session=False)
                 session.commit()
 
-            elif self.total_count > 25 :
+            elif self.total_count > 1000 :
 
-                i = query_url.rfind(":")
-
-                year = int(query_url[i + 1:i + 5])
-                month = int(query_url[i + 6:i + 8])
-                day = int(query_url[i + 9:i + 11])
-
-                x = query_url.rfind("=")
-                z = query_url.rfind("+")
-                repo_name = query_url[x + 1:z]
-
-                repo_date1 = dt.datetime(year, month, day)
-
-
-                last_datetime = ''
-                flag = True
-
-                for i in range(24):
-
-                    uid = uuid.uuid4().hex
-                    if flag == True:
-
-                        start_datetime = repo_date1 + dt.timedelta(seconds=0)
-                        date_created = dt.datetime.strftime(start_datetime, "%Y-%m-%d")
-                        start_time = dt.datetime.strftime(start_datetime, "%H:%M:%S")
-
-                        last_datetime = repo_date1 + dt.timedelta(hours=1)
-                        last_time = dt.datetime.strftime(last_datetime, "%H:%M:%S")
-
-                        target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{start_created_date}T{start_time}..{last_created_date}T{last_time}".format(
-                            repo_name=repo_name, start_created_date=date_created, start_time=start_time,
-                            last_created_date=date_created, last_time=last_time)
-
-                        print(target_url)
-                        select_job_details = session.query(job_details_by_githubapi).order_by(
-                            desc(job_details_by_githubapi.CreatedAt))
-                        select_one_job = select_job_details.first()
-                        last_job_datetime = select_one_job.CreatedAt
-
-                        date_time_obj = dt.datetime.strptime(last_job_datetime, "%Y-%m-%d %H:%M:%S")
-                        nextTime = date_time_obj + dt.timedelta(seconds=10)
-                        run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-
-                        self.add_job_by_time(target_url,run_date,uid)
-                        flag = False
-
-                    else:
-
-                        date_created = dt.datetime.strftime(last_datetime, "%Y-%m-%d")
-                        start_time = dt.datetime.strftime(last_datetime, "%H:%M:%S")
-
-                        last_datetime = last_datetime + dt.timedelta(hours=1)
-                        last_time = dt.datetime.strftime(last_datetime, "%H:%M:%S")
-
-                        target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{start_created_date}T{start_time}..{last_created_date}T{last_time}".format(
-                            repo_name=repo_name, start_created_date=date_created, start_time=start_time,
-                            last_created_date=date_created, last_time=last_time)
-
-                        print(target_url)
-                        select_job_details = session.query(job_details_by_githubapi).order_by(
-                            desc(job_details_by_githubapi.CreatedAt))
-                        select_one_job = select_job_details.first()
-                        last_job_datetime = select_one_job.CreatedAt
-
-                        date_time_obj = dt.datetime.strptime(last_job_datetime, "%Y-%m-%d %H:%M:%S")
-                        nextTime = date_time_obj + dt.timedelta(seconds=10)
-                        run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
-
-
-                        self.add_job_by_time(target_url, run_date, uid)
-
-
+                self.add_job_by_hour(query_url)
 
             else:
 
@@ -279,6 +209,77 @@ class GitRepoApisDetails:
                                                    Countfailjob='0')
         session.add(github_repo_api)
         session.commit()
+
+
+    def add_job_by_hour(self,query_url):
+
+        i = query_url.rfind(":")
+
+        year = int(query_url[i + 1:i + 5])
+        month = int(query_url[i + 6:i + 8])
+        day = int(query_url[i + 9:i + 11])
+
+        x = query_url.rfind("=")
+        z = query_url.rfind("+")
+        repo_name = query_url[x + 1:z]
+
+        repo_date1 = dt.datetime(year, month, day)
+
+        last_datetime = ''
+        flag = True
+
+        for i in range(24):
+
+            uid = uuid.uuid4().hex
+            if flag == True:
+
+                start_datetime = repo_date1 + dt.timedelta(seconds=0)
+                date_created = dt.datetime.strftime(start_datetime, "%Y-%m-%d")
+                start_time = dt.datetime.strftime(start_datetime, "%H:%M:%S")
+
+                last_datetime = repo_date1 + dt.timedelta(hours=1)
+                last_time = dt.datetime.strftime(last_datetime, "%H:%M:%S")
+
+                target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{start_created_date}T{start_time}..{last_created_date}T{last_time}".format(
+                    repo_name=repo_name, start_created_date=date_created, start_time=start_time,
+                    last_created_date=date_created, last_time=last_time)
+
+                print(target_url)
+                select_job_details = session.query(job_details_by_githubapi).order_by(
+                    desc(job_details_by_githubapi.CreatedAt))
+                select_one_job = select_job_details.first()
+                last_job_datetime = select_one_job.CreatedAt
+
+                date_time_obj = dt.datetime.strptime(last_job_datetime, "%Y-%m-%d %H:%M:%S")
+                nextTime = date_time_obj + dt.timedelta(seconds=10)
+                run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+
+                self.add_job_by_time(target_url, run_date, uid)
+                flag = False
+
+            else:
+
+                date_created = dt.datetime.strftime(last_datetime, "%Y-%m-%d")
+                start_time = dt.datetime.strftime(last_datetime, "%H:%M:%S")
+
+                last_datetime = last_datetime + dt.timedelta(hours=1)
+                last_time = dt.datetime.strftime(last_datetime, "%H:%M:%S")
+
+                target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{start_created_date}T{start_time}..{last_created_date}T{last_time}".format(
+                    repo_name=repo_name, start_created_date=date_created, start_time=start_time,
+                    last_created_date=date_created, last_time=last_time)
+
+                print(target_url)
+                select_job_details = session.query(job_details_by_githubapi).order_by(
+                    desc(job_details_by_githubapi.CreatedAt))
+                select_one_job = select_job_details.first()
+                last_job_datetime = select_one_job.CreatedAt
+
+                date_time_obj = dt.datetime.strptime(last_job_datetime, "%Y-%m-%d %H:%M:%S")
+                nextTime = date_time_obj + dt.timedelta(seconds=10)
+                run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+
+                self.add_job_by_time(target_url, run_date, uid)
 
 
 obj = GitRepoApisDetails()
