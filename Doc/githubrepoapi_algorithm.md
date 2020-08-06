@@ -77,7 +77,8 @@ https://api.github.com/search/repositories?q=java+created:2020-01-01T14:02:00Z..
 
 * Every url which is used to search the results in the github is passed in function arguments.Each function call by job.  
 Every job is scheduled by one min. The job details are saved in sqlite database using sqlalchemy. Table name is    
-githubapijob . columns are JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus, Joblog, previousjobid.      
+githubapijob . columns are JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus, Joblog, previousjobid, retry_failed_jobs.      
+   
 
 
 * Pass job id in add.job argument and use job id to job function if api work properly then job status is complete.     
@@ -108,8 +109,12 @@ Column of githubapijob table
                 }     
                 Third, use a job using try and exception. If a job fails then the exception is stored in the logjob column.  
                 ```        
-previousjobid: first job id is 1. if first job is fail. then it create new job  with job id 2. if second job is fail then    
-create new job with job id 3. These records are in  previousjobid column.   
+`previousjobid`: first job id is 1. if first job is fail. then it create new job  with job id 2. if second job is fail then    
+create new job with job id 3. These records are in  previousjobid column.    
+`retry_failed_jobs` : In this column we count how many times failed job create again. if job `A`  is failed again create       
+job `A` and retry failed jobs count is 1. if job `A`  is failed again create job `A` and retry failed jobs count is 2.    
+if job `A`  is failed again create job `A`and retry failed jobs count is 3. Then again job `A` is failed it does not       
+created job `A`.     
  
 * If the search api gets a total count is less than 100 and equal to 100 repositories details stored in elasticsearch    
 database.if total count is more than 100 then first stored 100 repositories details and create  the second url to      
