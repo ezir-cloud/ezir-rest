@@ -235,9 +235,8 @@ class GitRepoApisDetails:
         month = int(query_url[i + 6:i + 8])
         day = int(query_url[i + 9:i + 11])
 
-        x = query_url.rfind("=")
-        z = query_url.rfind("+")
-        repo_name = query_url[x + 1:z]
+        i = query_url.find("+")
+        slices_url = query_url[0 : i + 1]
 
         created_date = dt.datetime(year, month, day)
         change_created_date_format = dt.datetime.strftime(created_date, "%Y-%m-%d")
@@ -249,8 +248,8 @@ class GitRepoApisDetails:
             start_time = dt.datetime(year, month, day, hour).time()
             last_time = dt.datetime(year, month, day, end_hour).time()
 
-            target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{created_date}T{start_time}..{created_date}T{last_time}".format(
-                repo_name=repo_name,created_date=change_created_date_format, start_time=start_time, last_time=last_time)
+            target_url = "{slices_url}created:{created_date}T{start_time}..{created_date}T{last_time}".format(
+                slices_url=slices_url,created_date=change_created_date_format, start_time=start_time, last_time=last_time)
 
 
             select_job_details = session.query(job_details_by_githubapi).order_by(
