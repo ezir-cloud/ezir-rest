@@ -22,7 +22,7 @@ session = Session_macker()
 
 class job_details_by_githubapi(Base):
     __tablename__     = 'job_details_by_githubapi'
-    JobId             = Column(String(200),  primary_key=True)
+    JobId             = Column(String(200), primary_key=True)
     JobType           = Column(String(200))
     CreatedAt         = Column(String(200))
     UpdatedAt         = Column(String(200))
@@ -95,7 +95,7 @@ class GitRepoApisDetails:
                 {job_details_by_githubapi.Jobstatus: 'not_completed',
                  job_details_by_githubapi.Joblog: str(exception_msg)}, synchronize_session=False)
             session.commit()
-            self.re_add_fail_jobs(query_url, job_id)
+            self.re_add_failed_jobs(query_url, job_id)
 
 
     def get_repo_details_by_month(self,file_name, file_created_year, file_created_month,  job_year, job_month, job_day, job_hr, job_min, job_sec,  job_interval_count):
@@ -146,7 +146,7 @@ class GitRepoApisDetails:
         session.add(github_repo_api)
         session.commit()
 
-    def re_add_fail_jobs(self, query_url, job_id):
+    def re_add_failed_jobs(self, query_url, job_id):
 
         uid = uuid.uuid4().hex
         select_job_details = session.query(job_details_by_githubapi).order_by(desc(job_details_by_githubapi.CreatedAt))
@@ -158,18 +158,17 @@ class GitRepoApisDetails:
         get_retry_job              = get_failed_job_details.retry_failed_jobs
         count_retry_job            = get_retry_job + 1
 
-
         if count_retry_job  > 3:
 
-            print("retry job more then 3 time ")
             session.query(job_details_by_githubapi).filter(job_details_by_githubapi.JobId == job_id).update(
-                {job_details_by_githubapi.Jobstatus: 'This job retry more then 3 time',
+                {job_details_by_githubapi.Jobstatus: 'retry job less then 3 time',
                  job_details_by_githubapi.Joblog: str(self.matched_repositories),
                  job_details_by_githubapi.retry_failed_jobs: count_retry_job},
                 synchronize_session=False)
             session.commit()
 
         else:
+
             print(" retry job less then 3 time")
             date_time_obj = dt.datetime.strptime(last_job_datetime, "%Y-%m-%d %H:%M:%S")
             nextTime = date_time_obj + dt.timedelta(seconds=10)
@@ -191,6 +190,7 @@ class GitRepoApisDetails:
                                                        retry_failed_jobs=count_retry_job)
             session.add(github_repo_api)
             session.commit()
+
 
 obj=GitRepoApisDetails()
 # (file_name, file_created_year, file_created_month,job_year, job_month, job_day, job_hr, job_min, job_sec,  job_interval_count):

@@ -114,7 +114,8 @@ class GitRepoApisDetails:
             self.re_add_failed_jobs(query_url, job_id)
 
 
-    def get_repo_details_by_month(self,file_name, file_created_year, file_created_month,  job_year, job_month, job_day, job_hr, job_min, job_sec,  job_interval_count):
+    def get_repo_details_by_month(self,repo_name, file_created_year, file_created_month,
+                                  job_year, job_month, job_day, job_hr, job_min, job_sec,  job_interval_count):
 
 
         current_time = dt.datetime.now()
@@ -131,19 +132,110 @@ class GitRepoApisDetails:
             for days in range(1,total_days+1):
 
                 day_obj = datetime.date(file_created_year, file_created_month, days)
-                target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=file_name,date=day_obj)
+                target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
 
                 uid = uuid.uuid4().hex
                 if nextTime is None:
                     job_run_time = dt.datetime(job_year, job_month, job_day, job_hr, job_min, job_sec)
-                    nextTime =job_run_time + dt.timedelta(seconds=job_interval_count)
+                    nextTime =job_run_time + dt.timedelta(minutes=job_interval_count)
                     run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                     self.add_job_by_time(target_url,  run_date, uid)
 
                 else:
-                    nextTime = nextTime + dt.timedelta(seconds=job_interval_count)
+                    nextTime = nextTime + dt.timedelta(minutes=job_interval_count)
                     run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
                     self.add_job_by_time(target_url,  run_date, uid)
+
+
+    def get_repo_details_by_year(self, file_name, file_created_year, job_year, job_month, job_day, job_hr, job_min,
+                                 job_sec, job_interval_count):
+
+        current_time = dt.datetime.now()
+        change_current_time_format = dt.datetime.strftime(current_time, "%Y-%m-%d %H:%M:%S")
+        job_run_time = dt.datetime(job_year, job_month, job_day, job_hr, job_min, job_sec)
+        change_job_run_time_format = dt.datetime.strftime(job_run_time, "%Y-%m-%d %H:%M:%S")
+
+        if change_current_time_format > change_job_run_time_format:
+            print("please enter valid datetime to set job runtime")
+
+        else:
+            nextTime = None
+            for month in range(1, 13):
+
+                total_days = calendar.monthrange(file_created_year, month)[1]
+                for days in range(1, total_days + 1):
+
+                    day_obj = datetime.date(file_created_year, month, days)
+                    target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=file_name, date=day_obj)
+
+                    uid = uuid.uuid4().hex
+                    if nextTime is None:
+                        print("if")
+                        job_run_time = dt.datetime(job_year, job_month, job_day, job_hr, job_min, job_sec)
+                        nextTime = job_run_time + dt.timedelta(minutes=job_interval_count)
+                        run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+                        self.add_job_by_time(target_url, run_date, uid)
+
+                    else:
+                        print("else")
+                        nextTime = nextTime + dt.timedelta(minutes=job_interval_count)
+                        run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+                        self.add_job_by_time(target_url, run_date, uid)
+
+    def get_repo_details_by_two_date(self, repo_name, repo_created_year1, repo_created_month1, repo_created_day1,
+                                     repo_created_year2,repo_created_month2, repo_created_day2, job_year, job_month,
+                                     job_day, job_hr, job_min, job_sec, job_interval_count):
+
+        current_time = dt.datetime.now()
+        change_current_time_format = dt.datetime.strftime(current_time, "%Y-%m-%d %H:%M:%S")
+        job_run_time = dt.datetime(job_year, job_month, job_day, job_hr, job_min, job_sec)
+        change_job_run_time_format = dt.datetime.strftime(job_run_time, "%Y-%m-%d %H:%M:%S")
+
+        if change_current_time_format > change_job_run_time_format:
+            print("please enter valid datetime to set job runtime")
+
+        else:
+            start_dt = datetime.date(repo_created_year1, repo_created_month1, repo_created_day1)
+            end_dt = datetime.date(repo_created_year2, repo_created_month2, repo_created_day2)
+
+            nextTime = None
+            for index in range((end_dt - start_dt).days + 1):
+                new_date = start_dt + datetime.timedelta(index)
+                day_obj = new_date.strftime("%Y-%m-%d")
+                target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(
+                    repo_name=repo_name, date=day_obj)
+
+                uid = uuid.uuid4().hex
+                if nextTime is None:
+                    job_run_time = dt.datetime(job_year, job_month, job_day, job_hr, job_min, job_sec)
+                    nextTime = job_run_time + dt.timedelta(minutes=job_interval_count)
+                    run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+                    self.add_job_by_time(target_url, run_date, uid)
+
+                else:
+                    nextTime = nextTime + dt.timedelta(minutes=job_interval_count)
+                    run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+                    self.add_job_by_time(target_url, run_date, uid)
+
+    def get_repo_by_date(self, repo_name, repo_created_year, repo_created_month, repo_created_day, job_year, job_month,
+                         job_day, job_hr, job_min, job_sec, job_interval_count):
+
+        current_time = dt.datetime.now()
+        change_current_time_format = dt.datetime.strftime(current_time, "%Y-%m-%d %H:%M:%S")
+        job_run_time = dt.datetime(job_year, job_month, job_day, job_hr, job_min, job_sec)
+        change_job_run_time_format = dt.datetime.strftime(job_run_time, "%Y-%m-%d %H:%M:%S")
+
+        if change_current_time_format > change_job_run_time_format:
+            print("please enter valid datetime to set job runtime")
+
+        else:
+            day_obj = datetime.date(repo_created_year, repo_created_month, repo_created_day)
+            target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name, date=day_obj)
+            uid = uuid.uuid4().hex
+            job_run_time = dt.datetime(job_year, job_month, job_day, job_hr, job_min, job_sec)
+            nextTime = job_run_time + dt.timedelta(minutes=job_interval_count)
+            run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+            self.add_job_by_time(target_url, run_date, uid)
 
     def add_job_by_time(self, target_url, run_date, uid):
 
@@ -257,7 +349,10 @@ class GitRepoApisDetails:
 
 
 obj=GitRepoApisDetails()
-# (file_name, file_created_year, file_created_month,job_year, job_month, job_day, job_hr, job_min, job_sec,  job_interval_count):
-obj.get_repo_details_by_month("dockerfile", 2020, 4, 2020, 8, 6, 22, 17, 30, 5)
+
+obj.get_repo_details_by_month("dockerfile", 2020, 4, 2020, 8, 7, 20, 18, 00, 1)
+obj.get_repo_details_by_year("dockerfile", 2019,  2020, 8, 7, 20, 25 , 40, 6)
+obj.get_repo_details_by_two_date("dockerfile", 2018, 1, 1, 2018, 1, 10, 2020, 8, 7, 20, 43, 50, 7)
+obj.get_repo_by_date("dockerfile", 2020, 4, 1, 2020, 8, 7, 20, 47, 50, 1)
 
 sched.start()

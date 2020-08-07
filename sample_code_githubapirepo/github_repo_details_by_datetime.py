@@ -1,35 +1,14 @@
-from sqlalchemy import create_engine , Column, String, Integer, DateTime
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
-
 import requests
 import calendar
 import datetime
 import datetime as dt
-import json
+from datetime import date,timedelta
 from apscheduler.schedulers.blocking import BlockingScheduler
+from  sqlalchemy.orm import sessionmaker
+import json
 
-
-Engine = create_engine('sqlite:///github_repo_job_details.sqlite')
-Base = declarative_base()
-Session_macker = sessionmaker( bind= Engine)
-session = Session_macker()
-
-# JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus, Joblog, previousjobid.
-class githubrepoapi(Base):
-    __tablename__ = 'githubrepoapi'
-    JobId          = Column(String(200))
-    JobType        = Column(String(200))
-    CreatedAt      = Column(String(200))
-    UpdatedAt      = Column(String(200))
-    JobObject      = Column(String(200), primary_key=True)
-    Jobstatus      = Column(String(200))
-    Joblog         = Column(String(200))
-    previousjobid  = Column(String(200))
-
-# Base.metadata.create_all(Engine)
-
+from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy.ext.declarative import declarative_base
 
 
 sched = BlockingScheduler()
@@ -37,8 +16,6 @@ sched = BlockingScheduler()
 class GitRepoApisDetails:
 
         def job_is_get_repo(self,query_url):
-
-
 
             headers = {'content-type': 'application/json'}
             self.response = requests.get(query_url, headers=headers)
@@ -83,8 +60,6 @@ class GitRepoApisDetails:
             total_days=calendar.monthrange(year,month)[1]
             self.total_urls = []
 
-
-
             for days in range(1,total_days+1):
 
                 day_obj = datetime.date(year, month, days)
@@ -107,40 +82,78 @@ class GitRepoApisDetails:
             self.add_job_for_githubapi(self.total_urls)
 
 
-        def add_job_for_githubapi(self, year, month, day, hour, mint, sec):
+        def get_repo_details_by_two_date(self, repo_name, year1, month1, days1, year2, month2, days2):
 
-            job_run_data_time =dt.timedelta(seconds=20)
-            print(job_run_data_time)
-            # job_date_time_increase = job_run_data_time + job_run_data_time
-            # print(job_date_time_increase)
-            datetime_as_integer = job_run_data_time + 20
-            print(datetime_as_integer)
-            create_datatime = datetime.datetime(year, month, day, hour, mint, sec) +job_run_data_time
-            print(create_datatime)
+            start_dt = date(year1, month1, days1)
+            end_dt = date(year2, month2, days2)
+            self.total_urls = []
+
+            for index in range((end_dt - start_dt).days + 1):
+
+                new_date = start_dt + timedelta(index)
+                day_obj = new_date.strftime("%Y-%m-%d")
+
+                self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name, date=day_obj)
+                self.total_urls.append(self.target_url)
+            self.add_job_for_githubapi(self.total_urls)
+
+
+        def  get_repo_by_date(self, repo_name, year , month, date ):
+
+            day_obj = datetime.date(year, month, date)
+            self.target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name, date=day_obj)
+            self.job_is_get_repo(self.target_url)
+
+
+        def add_job_for_githubapi(self, total_urls ):
 
             flag = 1
-            # for url in range(1, 31):
+            nextTime = ''
+
+            for url in total_urls:
+
+                if flag == 1:
+                    nextTime = dt.datetime.now() + dt.timedelta(seconds=5)
+                    run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+                    sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50 ,args=[url])
+                    flag = 0
+
+                else:
+                    nextTime = nextTime + dt.timedelta(seconds=1)
+                    run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
+                    sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date,  misfire_grace_time=50, args=[url])
 
 
-                # if flag == 1:
-                    # print("if")
 
-                    # new_datatime = create_datatime
-                    # print(new_datatime)
-                    # sched.add_job(obj.job_is_get_repo, 'date', run_date=create_datatime,  misfire_grace_time=50 ,args=[url])
-                    # flag = 0
-                # else:
-                    # print(flag)
-                    # print(new_datatime)
-                    # print("else")
-                    #
-                    # new_datatime = create_datatime + dt.timedelta(seconds=40)
-                    # update_datatime = new_datatime
-                    # print(new_datatime)
-                    # return_job_obj=sched.add_job(obj.job_is_get_repo, 'date', run_date=create_datatime,  misfire_grace_time=50, args=[url])
+
+
+
+Base = declarative_base()
+engine_job_store = create_engine('sqlite:///job_store.sqlite')
+engine = create_engine('sqlite:///github_repo_details')
+Session = sessionmaker(bind= engine)
+session = Session()
+
+
+# JobId, JobType,CreatedAt, UpdatedAt, JobObject, Jobstatus, Joblog, previousjobid.
+
+# class githubrepoapi(Base):
+#     __tablename__ = 'githubrepoapi'
+#     JobId          = Column(Integer, primary_key=True)
+#     JobType        = Column(String(200))
+#     CreatedAt      = Column(String(200))
+#     UpdatedAt      = Column(String(200))
+#     JobObject      = Column(String(200))
+#     Jobstatus      = Column(String(200))
+#     Joblog         = Column(String(200))
+#     previousjobid  = Column(String(200))
+
 obj=GitRepoApisDetails()
-# url=obj.get_repo_details_by_month("dockerfile",2020,2)
-job_by_date = obj.add_job_for_githubapi(2020, 7, 31, 22, 4, 00)
+url=obj.get_repo_details_by_month("dockerfile",2020,2)
+# url=obj.get_repo_details_by_year("dockerfile",2019)
+# url=obj.get_repo_by_date("dockerfile", 2020 , 1, 1)
+# url = obj.get_repo_details_by_two_date("dockerfile", 2019 , 1, 1, 2020, 1, 1 )
+
 try:
     sched.start()
 except (Exception):
