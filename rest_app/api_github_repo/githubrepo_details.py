@@ -5,6 +5,7 @@ import json
 import uuid
 import requests
 
+
 from apscheduler.schedulers.blocking import BlockingScheduler
 from sqlalchemy import create_engine, Column, String, Integer
 from sqlalchemy.orm import sessionmaker
@@ -12,7 +13,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from requests.exceptions import ConnectionError
 from sqlalchemy import desc
 from githubapis.constants import Github
-from rest_app.add_job_details import JobDetails
+from rest_app.api_github_repo.add_job_details import JobDetails
 
 
 sched = BlockingScheduler()
@@ -41,6 +42,7 @@ class GitRepoApisDetails:
     def job_is_get_repo(self,query_url, job_id):
 
         try:
+            print('hello')
             headers = {'content-type': 'application/json'}
             self.response = requests.get(query_url, headers=headers)
             self.matched_repositories = self.response.json()
@@ -129,11 +131,11 @@ class GitRepoApisDetails:
             print("please enter valid datetime to set job runtime")
 
         else:
-            total_days=calendar.monthrange(file_created_year,file_created_month)[1]
+            total_days=calendar.monthrange(int(file_created_year),int(file_created_month))[1]
             nextTime = None
             for days in range(1,total_days+1):
 
-                day_obj = datetime.date(file_created_year, file_created_month, days)
+                day_obj = datetime.date(int(file_created_year), int(file_created_month), days)
                 target_url = "{BASE_URL}/{SEARCH}/{REPOSITORIES}?q={repo_name}+created:{date}".format(BASE_URL=Github.BASE_URL.value,
                                                                          SEARCH=Github.SEARCH.value,
                                                                          REPOSITORIES=Github.REPOSITORIES.value,
@@ -153,8 +155,7 @@ class GitRepoApisDetails:
                     self.add_job_by_time(target_url,  run_date, uid)
 
 
-    def get_repo_details_by_year(self, repo_name, file_created_year):
-
+    def get_repo_details_by_year(self, repo_name, repo_created_year):
         current_time = dt.datetime.now()
         change_current_time_format = dt.datetime.strftime(current_time, "%Y-%m-%d %H:%M:%S")
         job_run_time = dt.datetime(JobDetails.job_year, JobDetails.job_month, JobDetails.job_day, JobDetails.job_hr,
@@ -165,19 +166,21 @@ class GitRepoApisDetails:
             print("please enter valid datetime to set job runtime")
 
         else:
+
             nextTime = None
             for month in range(1, 13):
 
-                total_days = calendar.monthrange(file_created_year, month)[1]
+                total_days = calendar.monthrange(int(repo_created_year), month)[1]
                 for days in range(1, total_days + 1):
 
-                    day_obj = datetime.date(file_created_year, month, days)
+                    day_obj = datetime.date(int(repo_created_year), month, days)
+
 
                     target_url = "{BASE_URL}/{SEARCH}/{REPOSITORIES}?q={repo_name}+created:{date}".format(BASE_URL=Github.BASE_URL.value,
                                                                                                     SEARCH=Github.SEARCH.value,
                                                                                                     REPOSITORIES=Github.REPOSITORIES.value,
                                                                                                     repo_name=repo_name, date=day_obj)
-
+                    print(target_url)
                     uid = uuid.uuid4().hex
                     if nextTime is None:
                         job_run_time = dt.datetime(JobDetails.job_year, JobDetails.job_month, JobDetails.job_day,
@@ -204,8 +207,9 @@ class GitRepoApisDetails:
             print("please enter valid datetime to set job runtime")
 
         else:
-            start_dt = datetime.date(repo_created_year1, repo_created_month1, repo_created_day1)
-            end_dt = datetime.date(repo_created_year2, repo_created_month2, repo_created_day2)
+
+            start_dt = datetime.date(int(repo_created_year1), int(repo_created_month1), int(repo_created_day1))
+            end_dt = datetime.date(int(repo_created_year2), int(repo_created_month2), int(repo_created_day2))
 
             nextTime = None
             for index in range((end_dt - start_dt).days + 1):
@@ -241,22 +245,27 @@ class GitRepoApisDetails:
             print("please enter valid datetime to set job runtime")
 
         else:
-            day_obj = datetime.date(repo_created_year, repo_created_month, repo_created_day)
+            day_obj = datetime.date(int(repo_created_year), int(repo_created_month), int(repo_created_day))
+            print("day_obj",day_obj)
             target_url = "{BASE_URL}/{SEARCH}/{REPOSITORIES}?q={repo_name}+created:{date}".format(BASE_URL=Github.BASE_URL.value,
                                                                                             SEARCH=Github.SEARCH.value,
                                                                                             REPOSITORIES=Github.REPOSITORIES.value,
                                                                                             repo_name=repo_name, date=day_obj)
 
+
             uid = uuid.uuid4().hex
             job_run_time = dt.datetime(JobDetails.job_year, JobDetails.job_month, JobDetails.job_day, JobDetails.job_hr,
                                        JobDetails.job_min, JobDetails.job_sec)
-            nextTime = job_run_time + dt.timedelta(minutes=JobDetails.job_interval_count)
+            nextTime = job_run_time + dt.timedelta(seconds=JobDetails.job_interval_count)
             run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
             self.add_job_by_time(target_url, run_date, uid)
 
-    def add_job_by_time(self, target_url, run_date, uid):
-
-        sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date, misfire_grace_time=10, args=[target_url, uid], id=uid)
+    def add_job_by_time(self, target_url: object, run_date: object, uid: object) -> object:
+        print(target_url)
+        print(run_date)
+        print(uid)
+        sh_obj=sched.add_job(self.job_is_get_repo, 'date', run_date=run_date, misfire_grace_time=10, args=[target_url, uid], id=uid)
+        print(sh_obj)
 
         job_details = {}
         for job in sched.get_jobs():
@@ -298,7 +307,7 @@ class GitRepoApisDetails:
             nextTime = date_time_obj + dt.timedelta(seconds=6)
             run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
 
-            sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date, misfire_grace_time=10, args=[query_url, uid],
+            sched.add_job(self.job_is_get_repo, 'date', run_date=run_date, misfire_grace_time=10, args=[query_url, uid],
                           id=uid)
 
             job_details = {}
@@ -348,7 +357,7 @@ class GitRepoApisDetails:
             nextTime = date_time_obj + dt.timedelta(seconds=6)
             run_date = dt.datetime.strftime(nextTime, "%Y-%m-%d %H:%M:%S")
 
-            sched.add_job(obj.job_is_get_repo, 'date', run_date=run_date, misfire_grace_time=50, args=[query_url, uid], id=uid)
+            sched.add_job(self.job_is_get_repo, 'date', run_date=run_date, misfire_grace_time=50, args=[query_url, uid], id=uid)
 
             job_details = {}
             for job in sched.get_jobs():
@@ -365,11 +374,10 @@ class GitRepoApisDetails:
             session.commit()
 
 
-obj=GitRepoApisDetails()
 
-# obj.get_repo_details_by_month("dockerfile", 2020, 4)
-# obj.get_repo_details_by_year("dockerfile", 2019)
+obj = GitRepoApisDetails()
+obj.get_repo_details_by_month("dockerfile", 2020, 4)
+obj.get_repo_details_by_year("dockerfile", 2018)
 obj.get_repo_details_by_two_date("dockerfile", 2018, 1, 1, 2018, 1, 10)
-# obj.get_repo_by_date("dockerfile", 2020, 4, 1)
-
+obj.get_repo_by_date("dockerfile", 2020, 4, 1)
 sched.start()
