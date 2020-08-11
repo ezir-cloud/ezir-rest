@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from requests.exceptions import ConnectionError
 from sqlalchemy import desc
+from githubapis.constants import Github
 
 
 sched = BlockingScheduler()
@@ -132,7 +133,10 @@ class GitRepoApisDetails:
             for days in range(1,total_days+1):
 
                 day_obj = datetime.date(file_created_year, file_created_month, days)
-                target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name,date=day_obj)
+                target_url = "{BASE_URL}/{SEARCH}/{REPOSITORIES}?q={repo_name}+created:{date}".format(BASE_URL=Github.BASE_URL.value,
+                                                                         SEARCH=Github.SEARCH.value,
+                                                                         REPOSITORIES=Github.REPOSITORIES.value,
+                                                                        repo_name=repo_name,date=day_obj)
 
                 uid = uuid.uuid4().hex
                 if nextTime is None:
@@ -147,7 +151,7 @@ class GitRepoApisDetails:
                     self.add_job_by_time(target_url,  run_date, uid)
 
 
-    def get_repo_details_by_year(self, file_name, file_created_year, job_year, job_month, job_day, job_hr, job_min,
+    def get_repo_details_by_year(self, repo_name, file_created_year, job_year, job_month, job_day, job_hr, job_min,
                                  job_sec, job_interval_count):
 
         current_time = dt.datetime.now()
@@ -166,7 +170,11 @@ class GitRepoApisDetails:
                 for days in range(1, total_days + 1):
 
                     day_obj = datetime.date(file_created_year, month, days)
-                    target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=file_name, date=day_obj)
+
+                    target_url = "{BASE_URL}/{SEARCH}/{REPOSITORIES}?q={repo_name}+created:{date}".format(BASE_URL=Github.BASE_URL.value,
+                                                                                                    SEARCH=Github.SEARCH.value,
+                                                                                                    REPOSITORIES=Github.REPOSITORIES.value,
+                                                                                                    repo_name=repo_name, date=day_obj)
 
                     uid = uuid.uuid4().hex
                     if nextTime is None:
@@ -202,8 +210,10 @@ class GitRepoApisDetails:
             for index in range((end_dt - start_dt).days + 1):
                 new_date = start_dt + datetime.timedelta(index)
                 day_obj = new_date.strftime("%Y-%m-%d")
-                target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(
-                    repo_name=repo_name, date=day_obj)
+                target_url = "{BASE_URL}/{SEARCH}/{REPOSITORIES}?q={repo_name}+created:{date}".format(BASE_URL=Github.BASE_URL.value,
+                                                                                                      SEARCH=Github.SEARCH.value,
+                                                                                                      REPOSITORIES=Github.REPOSITORIES.value,
+                                                                                                       repo_name=repo_name, date=day_obj)
 
                 uid = uuid.uuid4().hex
                 if nextTime is None:
@@ -230,7 +240,11 @@ class GitRepoApisDetails:
 
         else:
             day_obj = datetime.date(repo_created_year, repo_created_month, repo_created_day)
-            target_url = "https://api.github.com/search/repositories?q={repo_name}+created:{date}".format(repo_name=repo_name, date=day_obj)
+            target_url = "{BASE_URL}/{SEARCH}/{REPOSITORIES}?q={repo_name}+created:{date}".format(BASE_URL=Github.BASE_URL.value,
+                                                                                            SEARCH=Github.SEARCH.value,
+                                                                                            REPOSITORIES=Github.REPOSITORIES.value,
+                                                                                            repo_name=repo_name, date=day_obj)
+
             uid = uuid.uuid4().hex
             job_run_time = dt.datetime(job_year, job_month, job_day, job_hr, job_min, job_sec)
             nextTime = job_run_time + dt.timedelta(minutes=job_interval_count)
@@ -353,6 +367,6 @@ obj=GitRepoApisDetails()
 obj.get_repo_details_by_month("dockerfile", 2020, 4, 2020, 8, 7, 20, 18, 00, 1)
 obj.get_repo_details_by_year("dockerfile", 2019,  2020, 8, 7, 20, 25 , 40, 6)
 obj.get_repo_details_by_two_date("dockerfile", 2018, 1, 1, 2018, 1, 10, 2020, 8, 7, 20, 43, 50, 7)
-obj.get_repo_by_date("dockerfile", 2020, 4, 1, 2020, 8, 7, 20, 47, 50, 1)
+obj.get_repo_by_date("dockerfile", 2020, 4, 1, 2020, 8, 7, 20, 59, 15, 1)
 
 sched.start()
