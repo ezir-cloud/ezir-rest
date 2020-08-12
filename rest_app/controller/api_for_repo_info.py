@@ -1,6 +1,6 @@
-from _operator import index
+# from _operator import index
 from githubapis.search import GitRepositoryApisDetails
-from rest_app.dal.dal import insert_api_repo_info
+from rest_app.dal.dal import insert_api_repo_info,get_api_repo_info
 
 
 def api_for_repo_details(reponame):
@@ -12,5 +12,18 @@ def api_for_repo_details(reponame):
 def insert_repo_details(api_repo_info):
 
     index='github_repo_details'
-    repo_info = insert_api_repo_info(api_repo_info,index)
-    return repo_info
+    insert_api_repo_info(index,api_repo_info)
+
+
+def get_repo_details(repo_name):
+
+    index = 'github_repo_details'
+    repoinfo= get_api_repo_info(index,repo_name)
+    return repoinfo
+
+
+
+
+
+
+
