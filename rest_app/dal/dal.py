@@ -1,12 +1,7 @@
-import json
 import uuid
-import ndjson
 from elasticsearch import Elasticsearch, helpers
-from elasticsearch.helpers import bulk
 
 es = Elasticsearch()
-
-
 def bulk_json_data(api_repo_info,index):
     for doc in api_repo_info:
 
@@ -18,13 +13,23 @@ def bulk_json_data(api_repo_info,index):
             }
 
 
-def insert_api_repo_info(api_repo_info,index):
+def insert_api_repo_info(index, api_repo_info):
 
     try:
 
-        file_info_response = helpers.bulk(es, bulk_json_data(api_repo_info,index))
-        print(file_info_response)
+        helpers.bulk(es, bulk_json_data(api_repo_info, index))
 
     except Exception as err:
         import traceback
         print("Elasticsearch index() ERRPR",traceback.format_exc())
+
+
+def get_api_repo_info(index,repo_name):
+    try:
+        get_file_details = es.search(index=index, body={"query": {"match": {"name": repo_name}}})
+
+    except Exception as err:
+        import traceback
+        print("Elasticsearch search() ERRPR", traceback.format_exc())
+
+    return get_file_details
