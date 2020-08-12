@@ -106,7 +106,7 @@ class GitRepoApisDetails:
                     repo_details["forks"] = repo.get("forks")
                     repo_details["watchers"] = repo.get("watchers")
                     all_repositories_details.append(repo_details)
-
+                    return all_repositories_details
 
 
         except ConnectionError as exception_msg:
